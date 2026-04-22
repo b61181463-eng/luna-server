@@ -29,7 +29,7 @@ from luna_server_learning import (
 )
 
 app = FastAPI()
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 def get_openai_client():
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -229,7 +229,7 @@ def chat(request: ChatRequest):
         # 4. 답변 생성
         client = get_openai_client()
         response = client.responses.create(
-            model="gpt-5.4-mini",
+            model="gpt-4.1-mini",
             input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
