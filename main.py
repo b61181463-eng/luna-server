@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from luna_server_secrets import save_secret, delete_secret
 from goal_system import add_goal, get_active_goals
-from fastapi.responses import FileResponse
+
 from fastapi.staticfiles import StaticFiles
 from luna_server_web import (
     SITE_CONFIGS,
@@ -27,7 +27,12 @@ from luna_server_learning import (
     reflect_on_reply,
     should_store_memory,
 )
+from fastapi.responses import FileResponse
 
+@app.get("/")
+def serve_index():
+    return FileResponse("static/index.html")
+    
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 def get_openai_client():
@@ -168,11 +173,6 @@ class MemoryDeleteRequest(BaseModel):
 @app.get("/mobile")
 def mobile():
     return FileResponse("mobile.html")
-
-@app.get("/")
-def read_root():
-    return {"message": "루나 서버 시작됨"}
-
 
 @app.post("/chat")
 def chat(request: ChatRequest):
