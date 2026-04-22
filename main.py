@@ -236,7 +236,23 @@ def chat(request: ChatRequest):
             ]
         )
 
-        reply = response.output[0].content[0].text.strip()
+        # 기존
+        # reply = response.output_text.strip()
+
+        # 수정
+        reply = ""
+
+        if hasattr(response, "output_text") and response.output_text:
+            reply = response.output_text.strip()
+
+        elif hasattr(response, "output"):
+            try:
+                reply = response.output[0].content[0].text.strip()
+            except:
+                reply = ""
+
+        if not reply:
+            reply = "음... 지금 답변을 잘 못 만들었어 😢 다시 말해줄래?"
 
         # 5. 자동 기억 후보 추출
         memory_candidates = extract_memory_candidates(user_message, reply)
