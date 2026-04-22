@@ -229,7 +229,7 @@ def chat(request: ChatRequest):
         # 4. 답변 생성
         client = get_openai_client()
         response = client.responses.create(
-            model="gpt-4.1-mini",
+            model="gpt-5.4-mini",
             input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
