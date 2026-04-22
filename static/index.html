@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Luna</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/manifest.json">
+</head>
+
+<body style="font-family:sans-serif; padding:20px;">
+<h2>루나</h2>
+
+<input id="msg" placeholder="메시지 입력" style="width:70%">
+<button onclick="send()">전송</button>
+
+<div id="chat"></div>
+
+<script>
+async function send() {
+    const text = document.getElementById("msg").value;
+
+    const res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: text})
+    });
+
+    const data = await res.json();
+
+    const chat = document.getElementById("chat");
+    chat.innerHTML += "<p><b>나:</b> " + text + "</p>";
+    chat.innerHTML += "<p><b>루나:</b> " + data.reply + "</p>";
+}
+</script>
+</body>
+</html>

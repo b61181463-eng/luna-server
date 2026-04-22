@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+openai
+requests
+duckduckgo-search
+playwright
+keyring
+python-multipart
