@@ -29,10 +29,6 @@ from luna_server_learning import (
 )
 from fastapi.responses import FileResponse
 
-@app.get("/")
-def serve_index():
-    return FileResponse("static/index.html")
-    
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 def get_openai_client():
@@ -169,6 +165,10 @@ class MemorySearchRequest(BaseModel):
 
 class MemoryDeleteRequest(BaseModel):
     keyword: str
+
+@app.get("/")
+def serve_index():
+    return FileResponse("static/index.html")
 
 @app.get("/mobile")
 def mobile():
