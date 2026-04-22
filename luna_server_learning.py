@@ -1,7 +1,11 @@
 from openai import OpenAI
 import os
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY 환경변수가 비어 있어.")
+    return OpenAI(api_key=api_key)
 
 
 def extract_memory_candidates(user_text: str, assistant_reply: str) -> list[str]:
@@ -9,6 +13,7 @@ def extract_memory_candidates(user_text: str, assistant_reply: str) -> list[str]
     대화에서 장기 기억 후보를 0~3개 뽑는다.
     """
     try:
+        client = get_openai_client()
         response = client.responses.create(
             model="gpt-5.4-mini",
             input=[
@@ -45,6 +50,7 @@ def score_memory_importance(memory_text: str) -> int:
     기억 중요도 0~100 점수
     """
     try:
+        client = get_openai_client()
         response = client.responses.create(
             model="gpt-5.4-mini",
             input=[
@@ -76,6 +82,7 @@ def reflect_on_reply(user_text: str, assistant_reply: str) -> str:
     답변 품질을 짧게 자기 점검
     """
     try:
+        client = get_openai_client()
         response = client.responses.create(
             model="gpt-5.4-mini",
             input=[

@@ -30,7 +30,11 @@ from luna_server_learning import (
 
 app = FastAPI()
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY 환경변수가 비어 있어.")
+    return OpenAI(api_key=api_key)
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -175,6 +179,8 @@ def chat(request: ChatRequest):
     user_message = request.message
 
     try:
+        memories = load_memories()
+
         # 1. 서버 기억 검색
         memory_items = search_memories(user_message, max_items=5)
         memory_context = "\n".join(
@@ -192,7 +198,6 @@ def chat(request: ChatRequest):
             # 검색 결과 일부를 기억에 저장
             memory_text = summarize_search_results_for_memory(user_message, search_results)
             if memory_text and not memory_exists(memories, memory_text):
-                memories = load_memories()
                 memories.append({
                     "content": memory_text,
                     "source": "web",
@@ -222,16 +227,18 @@ def chat(request: ChatRequest):
             system_prompt += "\n\n규칙: 웹 검색 결과가 있으면 그 내용을 우선 참고해서 답하고, 확실하지 않으면 불확실하다고 말해."
 
         # 4. 답변 생성
+        client = get_openai_client()
         response = client.responses.create(
-            model="gpt-5.4-mini",
+            model="gpt-4.1-mini",
             input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
             ]
         )
 
-        reply = response.output_text.strip()
-                # 5. 자동 기억 후보 추출
+        reply = response.output[0].content[0].text.strip()
+
+        # 5. 자동 기억 후보 추출
         memory_candidates = extract_memory_candidates(user_message, reply)
 
         if memory_candidates:
@@ -265,8 +272,10 @@ def chat(request: ChatRequest):
                 "timestamp": time.time(),
             })
             save_memories(memories)
-            # 7. 자동 메모리 정리
-            clean_memories()
+
+        # 7. 자동 메모리 정리
+        clean_memories()
+
         if not reply:
             reply = "음, 잠깐만. 다시 한 번 말해줄래?"
 

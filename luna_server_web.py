@@ -205,34 +205,25 @@ def click_by_text(site_key: str, text: str, target_url: str | None = None, heade
     if not config:
         return False, f"{site_key} 사이트 설정이 없어."
 
-    login_type = config.get("login_type", "native")
+    storage_state = config["storage_state"]
+    if not Path(storage_state).exists():
+        return False, f"{site_key} 로그인 상태가 없어. 먼저 로그인해야 해."
 
     try:
         with sync_playwright() as p:
-            if login_type == "manual_google_bootstrap":
-                profile_dir = config.get("persistent_profile_dir")
-                channel = config.get("browser_channel", "chrome")
-
-                context = p.chromium.launch_persistent_context(
-                    user_data_dir=profile_dir,
-                    headless=not headed,
-                    channel=channel,
-                )
-                page = context.new_page()
-                page.goto(target_url or config["home_url"], wait_until="domcontentloaded")
-                page.get_by_text(text, exact=False).click(timeout=10000)
-                return True, f"'{text}' 클릭했어."
-
-            storage_state = config["storage_state"]
-            if not Path(storage_state).exists():
-                return False, f"{site_key} 로그인 상태가 없어. 먼저 로그인해야 해."
-
             browser = p.chromium.launch(headless=not headed)
             context = browser.new_context(storage_state=storage_state)
             page = context.new_page()
             page.goto(target_url or config["home_url"], wait_until="domcontentloaded")
-            page.get_by_text(text, exact=False).click(timeout=10000)
-            return True, f"'{text}' 클릭했어."
 
+            if site_key == "naver" and text == "메일":
+                page.get_by_role("tab", name="메일").click(timeout=10000)
+            else:
+                page.get_by_text(text, exact=False).first.click(timeout=10000)
+
+            if headed:
+                page.wait_for_timeout(15000)
+
+            return True, f"'{text}' 클릭했어."
     except Exception as e:
         return False, f"클릭 실패: {e}"
