@@ -1,113 +1,308 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <div id="header">🌙 루나</div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>루나</title>
+
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="루나" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <style>
-  body {
-    margin: 0;
-    background: #0f172a;
-    color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-  #header {
-    padding: 12px;
-    background: #1e293b;
-    text-align: center;
-    font-weight: bold;
-  }
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-  }
+    #header {
+      padding: 16px 14px 12px;
+      background: rgba(30, 41, 59, 0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  .msg {
-    max-width: 70%;
-    margin: 6px;
-    padding: 10px;
-    border-radius: 12px;
-  }
+    #avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #f0abfc, #8b5cf6 60%, #312e81);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 18px rgba(167, 139, 250, 0.45);
+    }
 
-  .user {
-    background: #38bdf8;
-    align-self: flex-end;
-    color: black;
-  }
+    #titleBox {
+      flex: 1;
+    }
 
-  .luna {
-    background: #a78bfa;
-    align-self: flex-start;
-    color: black;
-  }
+    #title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
 
-  #inputArea {
-    display: flex;
-    padding: 10px;
-    background: #1e293b;
-  }
+    #status {
+      margin-top: 2px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
 
-  input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-  }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-  button {
-    margin-left: 8px;
-    padding: 10px;
-    background: #6366f1;
-    border: none;
-    color: white;
-    border-radius: 8px;
-  }
+    .row {
+      display: flex;
+      width: 100%;
+    }
+
+    .row.user {
+      justify-content: flex-end;
+    }
+
+    .row.luna {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: 78%;
+      padding: 10px 12px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+
+    .user .bubble {
+      background: #38bdf8;
+      color: #04111d;
+      border-bottom-right-radius: 5px;
+    }
+
+    .luna .bubble {
+      background: #a78bfa;
+      color: #160f2e;
+      border-bottom-left-radius: 5px;
+    }
+
+    .system .bubble {
+      background: rgba(255,255,255,0.08);
+      color: #cbd5e1;
+      font-size: 13px;
+      align-self: center;
+      text-align: center;
+    }
+
+    #inputArea {
+      padding: 10px;
+      background: rgba(30, 41, 59, 0.98);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #msg {
+      flex: 1;
+      min-height: 44px;
+      border: none;
+      outline: none;
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #0f172a;
+      color: white;
+      font-size: 15px;
+    }
+
+    #msg::placeholder {
+      color: #94a3b8;
+    }
+
+    button {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      background: #6366f1;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    #micBtn {
+      background: #8b5cf6;
+    }
+
+    #sendBtn {
+      background: #2563eb;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .typing {
+      opacity: 0.8;
+      animation: pulse 1.1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.45; }
+      50% { opacity: 1; }
+      100% { opacity: 0.45; }
+    }
   </style>
 </head>
+
 <body>
+  <div id="header">
+    <div id="avatar">🌙</div>
+    <div id="titleBox">
+      <div id="title">루나</div>
+      <div id="status">대기 중</div>
+    </div>
+  </div>
 
-<div id="chat" style="display:flex; flex-direction:column;"></div>
+  <div id="chat"></div>
 
-<div id="inputArea">
-  <input id="msg" placeholder="루나에게 말해봐..." />
-  <button onclick="send()">전송</button>
-</div>
+  <div id="inputArea">
+    <button id="micBtn" onclick="startVoice()">🎤</button>
+    <input id="msg" placeholder="루나에게 말해봐..." />
+    <button id="sendBtn" onclick="send()">➤</button>
+  </div>
 
-<script>
-const chat = document.getElementById("chat");
+  <script>
+    const chat = document.getElementById("chat");
+    const statusText = document.getElementById("status");
+    const input = document.getElementById("msg");
 
-function add(text, cls) {
-  const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.innerText = text;
+    function setStatus(text) {
+      statusText.innerText = text;
+    }
 
-  document.getElementById("chat").appendChild(div);
-}
+    function addMessage(text, sender) {
+      const row = document.createElement("div");
+      row.className = "row " + sender;
 
-async function send() {
-  const input = document.getElementById("msg");
-  const text = input.value;
-  if (!text) return;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerText = text;
 
-  add("나: " + text, "user");
-  input.value = "";
+      row.appendChild(bubble);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
 
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ message: text })
-  });
+      return row;
+    }
 
-  const data = await res.json();
-  add("루나: " + (data.reply || "응답 없음"), "luna");;
-}
-</script>
+    function removeElement(el) {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    }
 
+    async function send() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      input.value = "";
+
+      setStatus("생각 중...");
+      const thinking = addMessage("생각 중...", "luna");
+      thinking.classList.add("typing");
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+        removeElement(thinking);
+
+        const reply = data.reply || "응답이 비어 있어.";
+        addMessage(reply, "luna");
+        setStatus("대기 중");
+
+      } catch (err) {
+        removeElement(thinking);
+        addMessage("서버 연결 오류가 났어.", "luna");
+        setStatus("오류");
+      }
+    }
+
+    input.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        send();
+      }
+    });
+
+    function startVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        addMessage("이 브라우저는 음성 인식을 지원하지 않아.", "luna");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "ko-KR";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
+      setStatus("듣는 중...");
+
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        input.value = text;
+        setStatus("생각 중...");
+        send();
+      };
+
+      recognition.onerror = function() {
+        setStatus("대기 중");
+        addMessage("음성을 잘 못 들었어. 다시 말해줘.", "luna");
+      };
+
+      recognition.onend = function() {
+        if (statusText.innerText === "듣는 중...") {
+          setStatus("대기 중");
+        }
+      };
+
+      recognition.start();
+    }
+
+    addMessage("안녕, 나는 루나야. 오늘도 도와줄게.", "luna");
+  </script>
 </body>
 </html>
