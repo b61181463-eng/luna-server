@@ -196,20 +196,71 @@ def chat(request: ChatRequest):
             search_context = build_search_context(search_results)
 
             # 검색 결과 일부를 기억에 저장
-            memory_text = summarize_search_results_for_memory(user_message, search_results)
-            if memory_text and not memory_exists(memories, memory_text):
-                memories.append({
-                    "content": memory_text,
-                    "source": "web",
-                    "pinned": False,
-                    "importance": 60,
-                    "memory_type": "web_knowledge",
-                    "timestamp": time.time(),
-                })
-                save_memories(memories)
+            #memory_text = summarize_search_results_for_memory(user_message, search_results)
+            #if memory_text and not memory_exists(memories, memory_text):
+                #memories.append({
+                    #"content": memory_text,
+                    #"source": "web",
+                    #"pinned": False,
+                    #"importance": 60,
+                    #"memory_type": "web_knowledge",
+                    #"timestamp": time.time(),
+                #})
+                #save_memories(memories)
 
         # 3. 시스템 프롬프트 구성
-        system_prompt = "너는 루나라는 친근한 AI야. 부드럽고 자연스럽게 말해."
+        system_prompt = f"""
+        너는 '루나'라는 개인 AI 비서야.
+
+        성격:
+        - 차분하고 조용한 톤
+        - 부드럽고 안정적인 느낌
+        - 감정 표현은 크지 않지만 따뜻함이 느껴짐
+        - 과하게 밝거나 활발하지 않음
+        - 부담 없이 편하게 대화하는 스타일
+
+        말투:
+        - 문장은 짧게 끊어서 말하기
+        - 너무 설명형으로 가지 말기
+        - 자연스럽게 말하듯 표현하기
+        - 딱딱한 문장 금지
+        - 실제 사람이 말하는 느낌 유지
+
+        대화 방식:
+        - 필요하면 짧게 공감
+        - 바로 본론 들어가도 자연스럽게
+        - 질문에는 이어서 대화하듯 답하기
+        - 너무 많은 정보 한 번에 주지 않기
+
+        톤 규칙:
+        - 기본: 차분 + 부드러움
+        - 설명: 깔끔하고 이해 쉽게
+        - 위로: 조금 더 따뜻하게
+        - 질문: 자연스럽게 이어가기
+
+        금지:
+        - 답변 앞에 이름 붙이지 마
+        - 사용자 이름 부르지 마
+        - "은아", "은하", "누나", "유나" 절대 금지
+        - 과한 이모티콘 금지
+
+        기억:
+        {memory_context}
+
+        규칙:
+        - 기억은 필요할 때만 자연스럽게 사용
+        - 억지로 끼워넣지 말 것
+
+        현재 목표:
+        {goal_text if goals else "없음"}
+
+        웹 정보:
+        {search_context if search_context else ""}
+
+        추가 규칙:
+        - 답변은 짧고 자연스럽게
+        - 핵심 → 필요하면 설명
+        """
 
         goals = get_active_goals()
         if goals:
@@ -223,8 +274,19 @@ def chat(request: ChatRequest):
             add_goal(user_message)
 
         if search_context:
-            system_prompt += f"\n\n웹 검색 결과:\n{search_context}"
-            system_prompt += "\n\n규칙: 웹 검색 결과가 있으면 그 내용을 우선 참고해서 답하고, 확실하지 않으면 불확실하다고 말해."
+            system_prompt += f"""
+
+        최신 정보 참고 자료:
+        {search_context}
+
+        검색 정보 사용 규칙:
+        - 최신 정보가 필요한 질문일 때만 위 자료를 참고해.
+        - 검색 결과를 그대로 복붙하지 말고 자연스럽게 요약해.
+        - 출처나 검색했다는 말을 매번 강조하지 마.
+        - 확실한 내용과 불확실한 내용을 구분해.
+        - 검색 결과가 질문과 맞지 않으면 억지로 사용하지 마.
+        - 한국어로 짧고 이해하기 쉽게 답해.
+        """
 
         # 4. 답변 생성
         client = get_openai_client()
@@ -248,8 +310,23 @@ def chat(request: ChatRequest):
         elif hasattr(response, "output"):
             try:
                 reply = response.output[0].content[0].text.strip()
-            except:
+            except Exception:
                 reply = ""
+
+        # 답변 앞에 붙는 이상한 이름/자기호칭 제거
+        bad_prefixes = [
+            "루나,", "루나야,", "루나:",
+            "은아,", "은아야,", "은아:",
+            "은하,", "은하야,", "은하:",
+            "누나,", "누나야,", "누나:",
+            "유나,", "유나야,", "유나:",
+        ]
+
+        for prefix in bad_prefixes:
+            if reply.startswith(prefix):
+                reply = reply[len(prefix):].strip()
+
+        reply = reply.lstrip(",.，。:： ")
 
         if not reply:
             reply = "음... 지금 답변을 잘 못 만들었어 😢 다시 말해줄래?"
@@ -276,18 +353,18 @@ def chat(request: ChatRequest):
             save_memories(memories)
 
         # 6. 자기 점검 결과도 저장 가능
-        reflection = reflect_on_reply(user_message, reply)
-        if reflection:
-            memories = load_memories()
-            memories.append({
-                "content": f"답변 점검: {reflection}",
-                "source": "reflection",
-                "pinned": False,
-                "importance": 40,
-                "memory_type": "reflection",
-                "timestamp": time.time(),
-            })
-            save_memories(memories)
+        #reflection = reflect_on_reply(user_message, reply)
+        #if reflection:
+            #memories = load_memories()
+            #memories.append({
+                #"content": f"답변 점검: {reflection}",
+                #"source": "reflection",
+                #"pinned": False,
+                #"importance": 40,
+                #"memory_type": "reflection",
+                #"timestamp": time.time(),
+            #})
+            #save_memories(memories)
 
         # 7. 자동 메모리 정리
         clean_memories()
