@@ -262,16 +262,9 @@ def chat(request: ChatRequest):
         - 핵심 → 필요하면 설명
         """
 
-        try:
-            goals = get_active_goals()
-        except Exception:
-            goals = []
-
+        goals = get_active_goals()
         if goals:
-            goal_text = "\n".join(
-                f"- {g.get('content', '')} ({g.get('progress', 0)}%)"
-                for g in goals
-            )
+            goal_text = "\n".join(f"- {g['content']} ({g['progress']}%)" for g in goals)
             system_prompt += f"\n\n현재 목표:\n{goal_text}"
 
         if memory_context:
