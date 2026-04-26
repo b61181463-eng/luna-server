@@ -252,7 +252,7 @@ def chat(request: ChatRequest):
         - 억지로 끼워넣지 말 것
 
         현재 목표:
-        {goal_text if goals else "없음"}
+        없음
 
         웹 정보:
         {search_context if search_context else ""}
