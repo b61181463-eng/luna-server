@@ -211,9 +211,16 @@ def chat(request: ChatRequest):
         # 3. 시스템 프롬프트 구성
         system_prompt = "너는 루나라는 친근한 AI야. 부드럽고 자연스럽게 말해."
 
-        goals = get_active_goals()
+        try:
+            goals = get_active_goals()
+        except Exception:
+            goals = []
+
         if goals:
-            goal_text = "\n".join(f"- {g['content']} ({g['progress']}%)" for g in goals)
+            goal_text = "\n".join(
+                f"- {g.get('content', '')} ({g.get('progress', 0)}%)"
+                for g in goals
+            )
             system_prompt += f"\n\n현재 목표:\n{goal_text}"
 
         if memory_context:
