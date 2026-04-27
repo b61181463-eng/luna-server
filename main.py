@@ -146,6 +146,42 @@ def search_memories(query: str, max_items: int = 5):
     scored.sort(key=lambda x: x[0], reverse=True)
     return [item for _, item in scored[:max_items]]
 
+
+def should_force_web_search(message: str) -> bool:
+    """최신 정보/실시간 확인이 필요한 질문을 조금 더 넓게 잡는다."""
+    text = (message or "").replace(" ", "").lower()
+    realtime_keywords = [
+        "오늘", "지금", "현재", "최신", "최근", "방금", "실시간",
+        "검색", "찾아", "알아봐", "확인", "뉴스", "기사", "날씨",
+        "주가", "환율", "일정", "가격", "순위", "업데이트", "공지",
+        "2026", "이번주", "이번달", "요즘", "오늘의", "현재의",
+    ]
+    return any(keyword in text for keyword in realtime_keywords)
+
+
+def save_web_results_to_memory(user_message: str, search_results: list):
+    """검색 결과 요약을 장기 기억에 저장한다. 너무 자주 중복 저장되지 않도록 append_memory를 사용한다."""
+    if not search_results:
+        return None
+
+    try:
+        memory_text = summarize_search_results_for_memory(user_message, search_results)
+    except Exception as e:
+        print(f"[웹 기억 요약 실패] {e}")
+        memory_text = ""
+
+    memory_text = (memory_text or "").strip()
+    if len(memory_text) < 10:
+        return None
+
+    return append_memory(
+        content=memory_text,
+        source="web_live_search",
+        pinned=False,
+        importance=65,
+        memory_type="web_knowledge",
+    )
+
 class SecretSaveRequest(BaseModel):
     site_key: str
     username: str
@@ -221,22 +257,17 @@ def chat(request: ChatRequest):
         search_results = []
         search_context = ""
 
-        if needs_web_search(user_message):
+        should_search_now = needs_web_search(user_message) or should_force_web_search(user_message)
+
+        if should_search_now:
+            print(f"[실시간 검색] {user_message}")
             search_results = web_search(user_message, max_items=5)
             search_context = build_search_context(search_results)
 
-            # 검색 결과 일부를 기억에 저장
-            #memory_text = summarize_search_results_for_memory(user_message, search_results)
-            #if memory_text and not memory_exists(memories, memory_text):
-                #memories.append({
-                    #"content": memory_text,
-                    #"source": "web",
-                    #"pinned": False,
-                    #"importance": 60,
-                    #"memory_type": "web_knowledge",
-                    #"timestamp": time.time(),
-                #})
-                #save_memories(memories)
+            # 검색 결과 일부를 장기 기억에 저장
+            saved_web_memory = save_web_results_to_memory(user_message, search_results)
+            if saved_web_memory:
+                print(f"[웹 기억 저장] {saved_web_memory.get('content', '')[:80]}")
 
         # 3. 시스템 프롬프트 구성
         system_prompt = f"""
@@ -274,12 +305,14 @@ def chat(request: ChatRequest):
         - "은아", "은하", "누나", "유나" 절대 금지
         - 과한 이모티콘 금지
 
-        기억:
-        {memory_context}
+        [사용자 기억]
+        {memory_context if memory_context else "관련 기억 없음"}
 
-        규칙:
-        - 기억은 필요할 때만 자연스럽게 사용
-        - 억지로 끼워넣지 말 것
+        [기억 사용 규칙]
+        - 이 기억은 사용자에 대한 정보야.
+        - 관련 질문이 나오면 반드시 자연스럽게 활용해.
+        - 사용자가 과거 대화나 이전 정보를 물으면 기억을 먼저 참고해.
+        - 억지로 끼워넣지 말고 필요할 때만 사용해.
 
         현재 목표:
         없음
@@ -509,6 +542,24 @@ def memory_delete(request: MemoryDeleteRequest):
         "message": f"{removed_count}개 삭제했어.",
         "removed_count": removed_count
     }
+
+@app.post("/search/live")
+def search_live(request: ChatRequest):
+    """채팅과 별개로 실시간 검색만 테스트할 때 쓰는 API."""
+    try:
+        results = web_search(request.message, max_items=5)
+        context = build_search_context(results)
+        saved = save_web_results_to_memory(request.message, results)
+        return {
+            "ok": True,
+            "query": request.message,
+            "count": len(results),
+            "context": context,
+            "saved_to_memory": bool(saved),
+        }
+    except Exception as e:
+        return {"ok": False, "message": f"실시간 검색 실패: {e}"}
+
 
 @app.post("/secret/save")
 def secret_save(request: SecretSaveRequest):
