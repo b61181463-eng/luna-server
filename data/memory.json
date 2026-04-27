@@ -76,5 +76,29 @@
     "importance": 78,
     "memory_type": "auto_learned",
     "timestamp": 1777282944.6317284
+  },
+  {
+    "content": "질문 '루나야 지금 우리 뭐 하고 있었지?' 관련 검색 결과: New Publishing Requirements & Evaluation Process for Games ... - Roblox / Apr 13, 2026 · Free Roblox Plus for Existing Creators We understand that adding Roblox Plus as a publishing requirement for reaching younger audiences is a significant change for creators. To",
+    "source": "web",
+    "pinned": false,
+    "importance": 60,
+    "memory_type": "web_knowledge",
+    "timestamp": 1777286985.9112716
+  },
+  {
+    "content": "사용자와의 대화에서 이름은 ‘광민’으로 불렸다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 58,
+    "memory_type": "auto_learned",
+    "timestamp": 1777287024.7923021
+  },
+  {
+    "content": "사용자는 나를 계속 업그레이드할 계획이다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 70,
+    "memory_type": "project",
+    "timestamp": 1777287051.1617105
   }
 ]
