@@ -8,6 +8,8 @@ import subprocess
 import platform
 import webbrowser
 import shutil
+import re
+
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 from pathlib import Path
@@ -34,6 +36,26 @@ from luna_server_learning import (
     should_store_memory,
 )
 from fastapi.responses import FileResponse
+
+
+def parse_schedule_from_message(text: str):
+    text = text.strip()
+
+    # 예: "내일 7시", "오늘 18시"
+    if "내일" in text:
+        base = datetime.now() + timedelta(days=1)
+    elif "오늘" in text:
+        base = datetime.now()
+    else:
+        base = datetime.now()
+
+    match = re.search(r"(\d{1,2})\s*시", text)
+    if match:
+        hour = int(match.group(1))
+        dt = base.replace(hour=hour, minute=0, second=0, microsecond=0)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    return None
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -568,6 +590,10 @@ def serve_index():
 @app.get("/mobile")
 def mobile():
     return FileResponse("mobile.html")
+
+@app.get("/health")
+def health():
+    return {"ok": True, "status": "running", "service": "luna_server"}
 
 @app.post("/chat")
 def chat(request: ChatRequest):
