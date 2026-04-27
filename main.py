@@ -101,6 +101,29 @@ def memory_exists(memories, content: str) -> bool:
             return True
     return False
 
+
+def append_memory(content: str, source: str = "client_auto", pinned: bool = False, importance: int = 55, memory_type: str = "conversation"):
+    """중복을 피해서 메모리를 저장하는 공통 함수."""
+    content = (content or "").strip()
+    if not content:
+        return None
+
+    memories = load_memories()
+    if memory_exists(memories, content):
+        return None
+
+    item = {
+        "content": content,
+        "source": source,
+        "pinned": bool(pinned),
+        "importance": int(importance),
+        "memory_type": memory_type,
+        "timestamp": time.time(),
+    }
+    memories.append(item)
+    save_memories(memories)
+    return item
+
 def search_memories(query: str, max_items: int = 5):
     memories = load_memories()
     q = query.strip().lower()
@@ -157,6 +180,13 @@ class MemoryAddRequest(BaseModel):
     importance: int = 50
     memory_type: str = "general"
 
+
+class MemorySaveRequest(BaseModel):
+    text: str
+    source: str = "client_auto"
+    pinned: bool = False
+    importance: int = 55
+    memory_type: str = "conversation"
 
 class MemorySearchRequest(BaseModel):
     query: str
@@ -384,6 +414,46 @@ def chat(request: ChatRequest):
             "used_web_search": False,
             "search_count": 0,
         }
+
+
+@app.post("/memory/save")
+def memory_save(request: MemorySaveRequest):
+    """클라이언트가 대화 내용을 간단히 저장할 때 쓰는 호환 API.
+    luna_voice_client.py / luna_chat_window.py에서 {"text": "..."} 형태로 호출해도 동작한다.
+    """
+    text = request.text.strip()
+    if not text:
+        return {"ok": False, "message": "빈 기억은 저장하지 않았어."}
+
+    # 너무 짧은 감탄사/잡음은 저장하지 않음
+    compact = text.replace(" ", "").strip(".,!?~…")
+    if len(compact) <= 1 or compact in {"어", "음", "응", "네", "예", "요"}:
+        return {"ok": True, "message": "저장할 만한 내용이 아니라 건너뛰었어.", "skipped": True}
+
+    # 사용자가 직접 기억해달라고 한 말은 조금 더 중요하게 저장
+    importance = request.importance
+    pinned = request.pinned
+    if any(word in text for word in ["기억해", "기억해줘", "잊지마", "저장해", "내 이름", "내가 좋아하는"]):
+        importance = max(importance, 75)
+        pinned = True
+
+    item = append_memory(
+        content=text,
+        source=request.source,
+        pinned=pinned,
+        importance=importance,
+        memory_type=request.memory_type,
+    )
+
+    if item is None:
+        return {"ok": True, "message": "이미 있거나 저장하지 않아도 되는 기억이야.", "duplicate": True}
+
+    return {"ok": True, "message": "기억 저장 완료", "item": item}
+
+
+@app.get("/memory/load")
+def memory_load():
+    return {"ok": True, "items": load_memories()}
 
 
 @app.post("/memory/add")
