@@ -227,6 +227,15 @@
       background: linear-gradient(135deg, #3b82f6, #2563eb);
     }
 
+    #notifyBtn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      width: auto;
+      min-width: 48px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+
     #emptyHint {
       margin: auto;
       text-align: center;
@@ -246,6 +255,7 @@
       <div id="title">루나</div>
       <div id="status">대기 중</div>
     </div>
+    <button id="notifyBtn" onclick="enablePush()">알림</button>
   </div>
 
   <div id="chatWrap">
@@ -340,6 +350,85 @@
         send();
       }
     });
+
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    async function enablePush() {
+      if (!("serviceWorker" in navigator)) {
+        addMessage("이 브라우저는 서비스 워커를 지원하지 않아.", "luna");
+        return;
+      }
+
+      if (!("PushManager" in window)) {
+        addMessage("이 브라우저는 푸시 알림을 지원하지 않아.", "luna");
+        return;
+      }
+
+      try {
+        setStatus("알림 연결 중...");
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          addMessage("알림 권한이 허용되지 않았어.", "luna");
+          setStatus("대기 중");
+          return;
+        }
+
+        const reg = await navigator.serviceWorker.register("/static/sw.js");
+
+        const keyRes = await fetch("/push/public-key");
+        const keyData = await keyRes.json();
+
+        if (!keyData.ok || !keyData.publicKey) {
+          addMessage("서버에 푸시 알림 키가 아직 설정되지 않았어.", "luna");
+          setStatus("대기 중");
+          return;
+        }
+
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+          });
+        }
+
+        const saveRes = await fetch("/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON() })
+        });
+
+        const saveData = await saveRes.json();
+        if (saveData.ok) {
+          addMessage("폰 알림 연결이 완료됐어.", "luna");
+          setStatus("알림 연결됨");
+        } else {
+          addMessage("알림 구독 저장에 실패했어: " + (saveData.message || ""), "luna");
+          setStatus("오류");
+        }
+
+      } catch (err) {
+        addMessage("알림 연결 중 오류가 났어: " + err.message, "luna");
+        setStatus("오류");
+      }
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/static/sw.js").catch(() => {});
+    }
+
 
     function startVoice() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

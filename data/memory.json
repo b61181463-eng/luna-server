@@ -44,5 +44,37 @@
     "importance": 80,
     "memory_type": "user_profile",
     "timestamp": 1777277345.8113055
+  },
+  {
+    "content": "사용자를 앞으로 “광민”이라고 부르기.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 78,
+    "memory_type": "auto_learned",
+    "timestamp": 1777282789.110075
+  },
+  {
+    "content": "앞으로 내 이름을 광민이라고 불러줘",
+    "source": "conversation_auto",
+    "pinned": true,
+    "importance": 80,
+    "memory_type": "user_profile",
+    "timestamp": 1777282791.5613909
+  },
+  {
+    "content": "사용자는 “광민아”라고 불러주길 원함.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 92,
+    "memory_type": "auto_learned",
+    "timestamp": 1777282818.6579692
+  },
+  {
+    "content": "사용자는 “음성 시작 버튼 삭제”를 요청했다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 78,
+    "memory_type": "auto_learned",
+    "timestamp": 1777282944.6317284
   }
 ]
