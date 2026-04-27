@@ -4,5 +4,45 @@
     "source": "web",
     "pinned": false,
     "timestamp": 1776841941.4860613
+  },
+  {
+    "content": "내 이름이 뭔지 알아?",
+    "source": "conversation_auto",
+    "pinned": true,
+    "importance": 80,
+    "memory_type": "user_profile",
+    "timestamp": 1777277269.8440056
+  },
+  {
+    "content": "사용자 이름은 김광민이다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 88,
+    "memory_type": "auto_learned",
+    "timestamp": 1777277290.2991793
+  },
+  {
+    "content": "앞으로 김광민님으로 부르면 된다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 88,
+    "memory_type": "auto_learned",
+    "timestamp": 1777277292.667955
+  },
+  {
+    "content": "내 이름은 김광민이야 기억해줘",
+    "source": "conversation_auto",
+    "pinned": true,
+    "importance": 80,
+    "memory_type": "user_profile",
+    "timestamp": 1777277295.1242692
+  },
+  {
+    "content": "내 이름이 뭐라고?",
+    "source": "conversation_auto",
+    "pinned": true,
+    "importance": 80,
+    "memory_type": "user_profile",
+    "timestamp": 1777277345.8113055
   }
 ]
