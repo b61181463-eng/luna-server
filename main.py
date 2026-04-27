@@ -9,19 +9,9 @@ import time
 import re
 import subprocess
 import webbrowser
-import base64
-import threading
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
-
-try:
-    from pywebpush import webpush, WebPushException
-except Exception:
-    webpush = None
-    class WebPushException(Exception):
-        pass
-
 
 # =========================================================
 # 안전 import: 일부 파일이 없어도 서버가 바로 죽지 않게 처리
@@ -118,13 +108,6 @@ TODO_FILE = DATA_DIR / "todos.json"
 SCHEDULE_FILE = DATA_DIR / "schedules.json"
 WORKFLOW_FILE = DATA_DIR / "workflows.json"
 RECENT_FILE = DATA_DIR / "recent_turns.json"
-PUSH_SUBSCRIPTIONS_FILE = DATA_DIR / "push_subscriptions.json"
-
-VAPID_PUBLIC_KEY = os.getenv("LUNA_VAPID_PUBLIC_KEY", "")
-VAPID_PRIVATE_KEY = os.getenv("LUNA_VAPID_PRIVATE_KEY", "")
-VAPID_CLAIMS = {
-    "sub": os.getenv("LUNA_VAPID_SUBJECT", "mailto:luna@example.com")
-}
 
 STATIC_DIR = BASE_DIR / "static"
 if STATIC_DIR.exists():
@@ -197,14 +180,6 @@ class WorkflowRequest(BaseModel):
 class WorkflowRunRequest(BaseModel):
     name: str
 
-class PushSubscribeRequest(BaseModel):
-    subscription: Dict[str, Any]
-
-class PushSendRequest(BaseModel):
-    title: str = "루나 알림"
-    body: str = "알림이 있어."
-    url: str = "/"
-
 # =========================================================
 # 공통 유틸
 # =========================================================
@@ -243,14 +218,36 @@ def normalize_text(text: str):
 # =========================================================
 def parse_schedule_from_message(text: str):
     """한국어 간단 일정 파서.
-    예: 오늘 7시, 내일 오후 3시 30분, 모레 18시
+    예:
+    - 오늘 7시
+    - 내일 오후 3시 30분
+    - 모레 18시
+    - 1분 뒤 / 10초 뒤 / 2시간 뒤 / 30분 후
     반환: YYYY-MM-DD HH:MM:SS 또는 None
     """
     text = normalize_text(text)
     if not text:
         return None
 
-    base = datetime.now()
+    now = datetime.now()
+
+    rel_seconds = 0
+    sec_match = re.search(r"(\d{1,3})\s*초\s*(뒤|후|있다가)", text)
+    min_match = re.search(r"(\d{1,3})\s*분\s*(뒤|후|있다가)", text)
+    hour_rel_match = re.search(r"(\d{1,2})\s*시간\s*(뒤|후|있다가)", text)
+
+    if sec_match:
+        rel_seconds += int(sec_match.group(1))
+    if min_match:
+        rel_seconds += int(min_match.group(1)) * 60
+    if hour_rel_match:
+        rel_seconds += int(hour_rel_match.group(1)) * 3600
+
+    if rel_seconds > 0:
+        dt = now + timedelta(seconds=rel_seconds)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    base = now
     if "모레" in text:
         base = base + timedelta(days=2)
     elif "내일" in text:
@@ -258,6 +255,7 @@ def parse_schedule_from_message(text: str):
 
     hour_match = re.search(r"(\d{1,2})\s*시", text)
     minute_match = re.search(r"(\d{1,2})\s*분", text)
+
     if not hour_match:
         return None
 
@@ -273,6 +271,10 @@ def parse_schedule_from_message(text: str):
         return None
 
     dt = base.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    if "오늘" not in text and "내일" not in text and "모레" not in text and dt <= now:
+        dt = dt + timedelta(days=1)
+
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 # =========================================================
@@ -676,11 +678,18 @@ def handle_builtin_command(user_message: str):
         return f"{count}개 완료 처리했어." if count else "완료할 할 일을 못 찾았어."
 
     # 일정/알림
-    if any(x in msg for x in ["알림 등록", "일정 추가", "일정 등록", "알려줘"]):
-        if any(t in msg for t in ["시", "분", "내일", "오늘", "모레"]):
-            item = add_schedule(msg)
+    schedule_keywords = [
+        "알림 등록", "알림 추가", "알람 등록", "알람 추가",
+        "일정 추가", "일정 등록", "리마인드", "리마인더",
+        "분 뒤", "분 후", "초 뒤", "초 후", "시간 뒤", "시간 후",
+    ]
+    if any(x in msg for x in schedule_keywords):
+        parsed_when = parse_schedule_from_message(msg)
+        if parsed_when:
+            item = add_schedule(msg, parsed_when)
             if item:
-                return f"일정으로 저장했어. 시간은 {item['when']} 이야."
+                return f"알림으로 저장했어. 시간은 {item['when']} 이야."
+        return "알림 시간을 잘 못 알아들었어. 예를 들면 '1분 뒤 알림 등록' 또는 '내일 오후 7시에 알림 등록'처럼 말해줘."
 
     if any(x in msg for x in ["알림 확인", "일정 확인", "알림 목록", "일정 목록"]):
         items = load_schedules()
@@ -709,131 +718,6 @@ def handle_builtin_command(user_message: str):
         return out
 
     return None
-
-
-# =========================================================
-# 모바일/PWA 푸시 알림
-# =========================================================
-def load_push_subscriptions():
-    data = load_json(PUSH_SUBSCRIPTIONS_FILE, [])
-    return data if isinstance(data, list) else []
-
-
-def save_push_subscriptions(items):
-    save_json(PUSH_SUBSCRIPTIONS_FILE, items)
-
-
-def subscription_key(sub: Dict[str, Any]) -> str:
-    return str(sub.get("endpoint", ""))
-
-
-def add_push_subscription(sub: Dict[str, Any]):
-    if not sub or not sub.get("endpoint"):
-        return False, "구독 정보가 비어 있어."
-
-    items = load_push_subscriptions()
-    key = subscription_key(sub)
-
-    # 같은 endpoint는 갱신
-    updated = False
-    for i, old in enumerate(items):
-        if subscription_key(old) == key:
-            items[i] = sub
-            updated = True
-            break
-
-    if not updated:
-        items.append(sub)
-
-    save_push_subscriptions(items)
-    return True, "알림 구독을 저장했어."
-
-
-def send_push_to_subscription(sub: Dict[str, Any], title: str, body: str, url: str = "/"):
-    if webpush is None:
-        return False, "pywebpush가 설치되어 있지 않아. pip install pywebpush cryptography 필요."
-
-    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        return False, "VAPID 키가 설정되어 있지 않아."
-
-    payload = json.dumps({
-        "title": title,
-        "body": body,
-        "url": url,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }, ensure_ascii=False)
-
-    try:
-        webpush(
-            subscription_info=sub,
-            data=payload,
-            vapid_private_key=VAPID_PRIVATE_KEY,
-            vapid_claims=VAPID_CLAIMS,
-        )
-        return True, "전송 완료"
-    except Exception as e:
-        return False, str(e)
-
-
-def send_push_notification(title: str, body: str, url: str = "/"):
-    items = load_push_subscriptions()
-    if not items:
-        return {"ok": False, "sent": 0, "message": "등록된 폰 알림 구독이 없어."}
-
-    sent = 0
-    failed = []
-    alive = []
-
-    for sub in items:
-        ok, msg = send_push_to_subscription(sub, title, body, url)
-        if ok:
-            sent += 1
-            alive.append(sub)
-        else:
-            failed.append(msg)
-            # 만료된 구독은 자동 정리될 수 있게 제외.
-            # 단순 네트워크 오류일 수도 있어서 전부 지우지는 않도록 조건 완화 가능.
-            if "410" not in msg and "expired" not in msg.lower() and "gone" not in msg.lower():
-                alive.append(sub)
-
-    save_push_subscriptions(alive)
-
-    return {
-        "ok": sent > 0,
-        "sent": sent,
-        "failed": failed[:5],
-        "message": f"{sent}개 기기에 알림을 보냈어.",
-    }
-
-
-def push_due_schedule_loop():
-    """서버가 켜져 있는 동안 일정 시간이 되면 폰으로 푸시 알림 전송."""
-    while True:
-        try:
-            due = due_schedules()
-            for item in due:
-                text = item.get("text", "알림이 있어.")
-                when = item.get("when", "")
-                send_push_notification(
-                    title="루나 알림",
-                    body=f"{text}\n{when}",
-                    url="/",
-                )
-        except Exception as e:
-            print("[push_due_schedule_loop 오류]", e)
-
-        time.sleep(30)
-
-
-@app.on_event("startup")
-def start_push_scheduler():
-    try:
-        t = threading.Thread(target=push_due_schedule_loop, daemon=True)
-        t.start()
-        print("[루나] 푸시 알림 스케줄러 시작")
-    except Exception as e:
-        print("[루나] 푸시 알림 스케줄러 시작 실패:", e)
-
 
 # =========================================================
 # 라우트
@@ -1141,39 +1025,6 @@ def web_open(request: WebOpenRequest):
 def web_click(request: WebClickRequest):
     ok, msg = click_by_text(request.site_key, text=request.text, target_url=request.target_url, headed=request.headed)
     return {"ok": ok, "message": msg}
-
-
-# =========================================================
-# 푸시 알림 API
-# =========================================================
-@app.get("/push/public-key")
-def push_public_key():
-    if not VAPID_PUBLIC_KEY:
-        return {"ok": False, "publicKey": "", "message": "LUNA_VAPID_PUBLIC_KEY가 설정되지 않았어."}
-    return {"ok": True, "publicKey": VAPID_PUBLIC_KEY}
-
-
-@app.post("/push/subscribe")
-def push_subscribe(request: PushSubscribeRequest):
-    ok, msg = add_push_subscription(request.subscription)
-    return {"ok": ok, "message": msg}
-
-
-@app.post("/push/send")
-def push_send(request: PushSendRequest):
-    return send_push_notification(request.title, request.body, request.url)
-
-
-@app.get("/push/status")
-def push_status():
-    return {
-        "ok": True,
-        "subscriptions": len(load_push_subscriptions()),
-        "has_public_key": bool(VAPID_PUBLIC_KEY),
-        "has_private_key": bool(VAPID_PRIVATE_KEY),
-        "pywebpush_ready": webpush is not None,
-    }
-
 
 # =========================================================
 # 검색 테스트 API
