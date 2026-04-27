@@ -4,6 +4,12 @@ from openai import OpenAI
 import os
 import json
 import time
+import subprocess
+import platform
+import webbrowser
+import shutil
+from datetime import datetime, timedelta
+from urllib.parse import quote_plus
 from pathlib import Path
 from luna_server_secrets import save_secret, delete_secret
 from goal_system import add_goal, get_active_goals
@@ -41,6 +47,11 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 MEMORY_FILE = DATA_DIR / "memory.json"
+TODO_FILE = DATA_DIR / "todos.json"
+SCHEDULE_FILE = DATA_DIR / "schedules.json"
+WORKFLOW_FILE = DATA_DIR / "workflows.json"
+SITE_ACTION_FILE = DATA_DIR / "site_actions.json"
+SAFE_FOLDERS_FILE = DATA_DIR / "safe_folders.json"
 
 
 def load_memories():
@@ -182,6 +193,264 @@ def save_web_results_to_memory(user_message: str, search_results: list):
         memory_type="web_knowledge",
     )
 
+
+# =========================
+# 할 일 / 일정 관리 기능
+# =========================
+def load_todos():
+    if not TODO_FILE.exists():
+        return []
+    try:
+        with open(TODO_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_todos(todos):
+    with open(TODO_FILE, "w", encoding="utf-8") as f:
+        json.dump(todos, f, ensure_ascii=False, indent=2)
+
+
+def add_todo_item(content: str, due: str | None = None, source: str = "chat"):
+    content = (content or "").strip()
+    if not content:
+        return None
+    todos = load_todos()
+    item = {
+        "id": str(int(time.time() * 1000)),
+        "content": content,
+        "due": due,
+        "done": False,
+        "source": source,
+        "timestamp": time.time(),
+    }
+    todos.append(item)
+    save_todos(todos)
+    return item
+
+
+def list_open_todos(limit: int = 20):
+    todos = [t for t in load_todos() if not t.get("done")]
+    todos.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+    return todos[:limit]
+
+
+def complete_todo_by_keyword(keyword: str):
+    keyword = (keyword or "").strip().lower()
+    if not keyword:
+        return 0
+    todos = load_todos()
+    count = 0
+    for item in todos:
+        if not item.get("done") and keyword in str(item.get("content", "")).lower():
+            item["done"] = True
+            item["done_at"] = time.time()
+            count += 1
+    if count:
+        save_todos(todos)
+    return count
+
+
+def parse_todo_from_message(message: str):
+    """자연어에서 간단히 할 일을 뽑는다. 완벽한 자연어 처리는 나중에 고도화."""
+    text = (message or "").strip()
+    lower = text.replace(" ", "")
+    triggers = ["할일추가", "할일등록", "해야할일", "기억해줘", "일정추가", "일정등록", "체크해줘"]
+    if not any(t in lower for t in triggers):
+        return None
+
+    cleaned = text
+    for word in ["루나야", "루나", "할 일 추가", "할일 추가", "할일추가", "할 일 등록", "할일등록", "일정 추가", "일정추가", "기억해줘", "체크해줘", "해야 할 일", "해야할일"]:
+        cleaned = cleaned.replace(word, "")
+    cleaned = cleaned.strip(" :：,，.。")
+    if len(cleaned) < 2:
+        return None
+    return cleaned
+
+
+def format_todo_list(todos):
+    if not todos:
+        return "지금 남아있는 할 일은 없어."
+    lines = []
+    for idx, item in enumerate(todos, 1):
+        due = item.get("due")
+        suffix = f" ({due})" if due else ""
+        lines.append(f"{idx}. {item.get('content', '')}{suffix}")
+    return "지금 남아있는 할 일이야.\n" + "\n".join(lines)
+
+
+# =========================
+# PC 제어 기능
+# =========================
+APP_ALIASES = {
+    "메모장": "notepad.exe",
+    "계산기": "calc.exe",
+    "그림판": "mspaint.exe",
+    "크롬": "chrome.exe",
+    "엣지": "msedge.exe",
+    "탐색기": "explorer.exe",
+    "파일탐색기": "explorer.exe",
+}
+
+SAFE_URL_ALIASES = {
+    "구글": "https://www.google.com",
+    "네이버": "https://www.naver.com",
+    "유튜브": "https://www.youtube.com",
+    "깃허브": "https://github.com",
+    "github": "https://github.com",
+}
+
+
+def open_app_by_name(name: str):
+    name = (name or "").strip().lower()
+    for key, command in APP_ALIASES.items():
+        if key.lower() in name:
+            subprocess.Popen(command, shell=True)
+            return True, f"{key} 열었어."
+    return False, "아직 그 프로그램은 등록되어 있지 않아."
+
+
+def open_url_or_site(text: str):
+    raw = (text or "").strip()
+    normalized = raw.replace(" ", "").lower()
+    for key, url in SAFE_URL_ALIASES.items():
+        if key.lower() in normalized:
+            webbrowser.open(url)
+            return True, f"{key} 열었어."
+    if raw.startswith("http://") or raw.startswith("https://"):
+        webbrowser.open(raw)
+        return True, "웹사이트 열었어."
+    return False, "열 사이트를 찾지 못했어."
+
+
+def handle_local_command(user_message: str):
+    """채팅/음성 명령 중 서버 답변 없이 바로 처리할 수 있는 로컬 기능."""
+    text = (user_message or "").strip()
+    compact = text.replace(" ", "")
+
+    # 알림 도착 확인
+    if any(x in compact for x in ["알림확인", "지난알림", "알림있어", "일정확인"]):
+        due = due_schedules()
+        if due:
+            return "지금 확인할 알림이 있어.\n" + format_schedule_list(due)
+        return "지금 도착한 알림은 없어."
+
+    # 일정/알림 목록
+    if any(x in compact for x in ["일정목록", "알림목록", "일정보여", "알림보여"]):
+        return format_schedule_list(list_schedules())
+
+    # 일정 완료
+    if any(x in compact for x in ["일정완료", "알림완료"]):
+        keyword = text
+        for word in ["루나야", "루나", "일정 완료", "일정완료", "알림 완료", "알림완료"]:
+            keyword = keyword.replace(word, "")
+        count = complete_schedule_by_keyword(keyword.strip(" :：,，.。"))
+        return f"좋아, {count}개 완료 처리했어." if count else "완료할 일정/알림을 못 찾았어."
+
+    # 일정/알림 추가
+    schedule = parse_schedule_from_message(text)
+    if schedule:
+        title, when = schedule
+        item = add_schedule_item(title, when=when)
+        return f"좋아, 일정/알림에 추가했어.\n- {item['title']}" + (f" ({item['when']})" if item.get('when') else "")
+
+    # 할 일 목록 조회
+    if any(x in compact for x in ["할일목록", "할일뭐", "해야할일", "투두목록"]):
+        return format_todo_list(list_open_todos())
+
+    # 할 일 완료 처리
+    if any(x in compact for x in ["할일완료", "끝냈어", "완료했어"]):
+        keyword = text
+        for word in ["루나야", "루나", "할 일 완료", "할일 완료", "할일완료", "끝냈어", "완료했어"]:
+            keyword = keyword.replace(word, "")
+        keyword = keyword.strip(" :：,，.。")
+        count = complete_todo_by_keyword(keyword)
+        if count:
+            return f"좋아, {count}개 완료로 표시했어."
+        return "완료 처리할 할 일을 못 찾았어."
+
+    # 할 일 추가
+    todo = parse_todo_from_message(text)
+    if todo:
+        item = add_todo_item(todo, source="chat_command")
+        append_memory(
+            content=f"사용자의 할 일: {todo}",
+            source="todo",
+            pinned=False,
+            importance=70,
+            memory_type="todo",
+        )
+        return f"좋아, 할 일에 추가했어.\n- {item['content']}"
+
+    # 폴더/파일 목록: "루나야 폴더 목록 D:\\ai"
+    if any(x in compact for x in ["폴더목록", "파일목록"]):
+        target = text
+        for word in ["루나야", "루나", "폴더 목록", "폴더목록", "파일 목록", "파일목록", "보여줘"]:
+            target = target.replace(word, "")
+        ok, msg, items = list_folder(target.strip() or ".")
+        if not ok:
+            return msg
+        if not items:
+            return msg + "\n비어 있어."
+        lines = [f"- {it['type']}: {it['name']}" for it in items[:20]]
+        return msg + "\n" + "\n".join(lines)
+
+    # 파일 검색: "루나야 파일 검색 report D:\\ai"
+    if any(x in compact for x in ["파일검색", "폴더검색"]):
+        target = text
+        for word in ["루나야", "루나", "파일 검색", "파일검색", "폴더 검색", "폴더검색", "찾아줘", "찾아"]:
+            target = target.replace(word, "")
+        parts = target.strip().split(maxsplit=1)
+        keyword = parts[0] if parts else ""
+        folder = parts[1] if len(parts) > 1 else "."
+        ok, msg, results = search_files(keyword, folder=folder)
+        if not ok:
+            return msg
+        if not results:
+            return msg
+        return msg + "\n" + "\n".join(f"- {r['name']}" for r in results[:15])
+
+    # 파일/폴더 열기: "루나야 D:\\ai 열어줘"
+    if any(x in compact for x in ["파일열어", "폴더열어"]):
+        target = text
+        for word in ["루나야", "루나", "파일 열어줘", "파일열어줘", "폴더 열어줘", "폴더열어줘", "열어줘"]:
+            target = target.replace(word, "")
+        ok, msg = open_path(target.strip())
+        return msg
+
+    # 작업 플로우 실행: "루나야 플로우 실행 공부시작"
+    if any(x in compact for x in ["플로우실행", "작업실행"]):
+        name = text
+        for word in ["루나야", "루나", "플로우 실행", "플로우실행", "작업 실행", "작업실행", "실행해줘"]:
+            name = name.replace(word, "")
+        ok, msg, logs = run_workflow(name.strip())
+        return msg
+
+    # 사이트 동작 실행: "루나야 사이트 동작 실행 kmooc"
+    if any(x in compact for x in ["사이트동작실행", "웹동작실행"]):
+        name = text
+        for word in ["루나야", "루나", "사이트 동작 실행", "사이트동작실행", "웹 동작 실행", "웹동작실행", "실행해줘"]:
+            name = name.replace(word, "")
+        result = run_site_action(name.strip())
+        if len(result) == 3:
+            ok, msg, logs = result
+        else:
+            ok, msg = result
+        return msg
+
+    # PC 앱 실행 / 사이트 열기
+    if any(x in compact for x in ["열어줘", "실행해줘", "켜줘"]):
+        ok, msg = open_app_by_name(text)
+        if ok:
+            return msg
+        ok, msg = open_url_or_site(text)
+        if ok:
+            return msg
+
+    return None
+
 class SecretSaveRequest(BaseModel):
     site_key: str
     username: str
@@ -232,6 +501,66 @@ class MemorySearchRequest(BaseModel):
 class MemoryDeleteRequest(BaseModel):
     keyword: str
 
+
+class TodoAddRequest(BaseModel):
+    content: str
+    due: str | None = None
+
+class TodoCompleteRequest(BaseModel):
+    keyword: str
+
+class PcOpenAppRequest(BaseModel):
+    name: str
+
+class PcOpenUrlRequest(BaseModel):
+    url_or_name: str
+
+
+class FileAllowFolderRequest(BaseModel):
+    path: str
+
+class FileListRequest(BaseModel):
+    path: str = "."
+
+class FileOpenRequest(BaseModel):
+    path: str
+
+class FileSearchRequest(BaseModel):
+    keyword: str
+    folder: str = "."
+    limit: int = 20
+
+class NoteCreateRequest(BaseModel):
+    filename: str
+    content: str
+
+class ScheduleAddRequest(BaseModel):
+    title: str
+    when: str | None = None
+    note: str = ""
+    remind: bool = True
+
+class ScheduleCompleteRequest(BaseModel):
+    keyword: str
+
+class SiteActionRegisterRequest(BaseModel):
+    name: str
+    site_key: str
+    steps: list
+    description: str = ""
+
+class SiteActionRunRequest(BaseModel):
+    name: str
+    headed: bool = True
+
+class WorkflowRegisterRequest(BaseModel):
+    name: str
+    steps: list
+    description: str = ""
+
+class WorkflowRunRequest(BaseModel):
+    name: str
+
 @app.get("/")
 def serve_index():
     return FileResponse("static/index.html")
@@ -245,6 +574,17 @@ def chat(request: ChatRequest):
     user_message = request.message
 
     try:
+        local_reply = handle_local_command(user_message)
+        if local_reply:
+            auto_learn_from_turn(user_message, local_reply, search_results=None)
+            clean_memories()
+            return {
+                "reply": local_reply,
+                "used_web_search": False,
+                "search_count": 0,
+                "handled_locally": True,
+            }
+
         memories = load_memories()
 
         # 1. 서버 기억 검색
@@ -394,26 +734,10 @@ def chat(request: ChatRequest):
         if not reply:
             reply = "음... 지금 답변을 잘 못 만들었어 😢 다시 말해줄래?"
 
-        # 5. 자동 기억 후보 추출
-        memory_candidates = extract_memory_candidates(user_message, reply)
-
-        if memory_candidates:
-            memories = load_memories()
-
-            for mem in memory_candidates:
-                importance = score_memory_importance(mem)
-
-                if should_store_memory(mem, importance) and not memory_exists(memories, mem):
-                    memories.append({
-                        "content": mem,
-                        "source": "conversation_auto",
-                        "pinned": False,
-                        "importance": importance,
-                        "memory_type": "auto_learned",
-                        "timestamp": time.time(),
-                    })
-
-            save_memories(memories)
+        # 5. 완전 자동 학습: 중요한 정보는 사용자가 따로 말하지 않아도 저장
+        learned_items = auto_learn_from_turn(user_message, reply, search_results=search_results)
+        if learned_items:
+            print(f"[완전 자동 학습] {len(learned_items)}개 저장")
 
         # 6. 자기 점검 결과도 저장 가능
         #reflection = reflect_on_reply(user_message, reply)
@@ -463,12 +787,16 @@ def memory_save(request: MemorySaveRequest):
     if len(compact) <= 1 or compact in {"어", "음", "응", "네", "예", "요"}:
         return {"ok": True, "message": "저장할 만한 내용이 아니라 건너뛰었어.", "skipped": True}
 
-    # 사용자가 직접 기억해달라고 한 말은 조금 더 중요하게 저장
+    # 완전 자동 학습 분류기를 사용해서 중요도/고정 여부를 자동 보정
     importance = request.importance
     pinned = request.pinned
-    if any(word in text for word in ["기억해", "기억해줘", "잊지마", "저장해", "내 이름", "내가 좋아하는"]):
-        importance = max(importance, 75)
-        pinned = True
+    classified = classify_memory_content(text)
+    if classified:
+        memory_type_auto, auto_importance, auto_pinned = classified
+        importance = max(importance, auto_importance)
+        pinned = pinned or auto_pinned
+        if request.memory_type == "conversation":
+            request.memory_type = memory_type_auto
 
     item = append_memory(
         content=text,
@@ -560,6 +888,139 @@ def search_live(request: ChatRequest):
     except Exception as e:
         return {"ok": False, "message": f"실시간 검색 실패: {e}"}
 
+
+
+@app.post("/todo/add")
+def todo_add(request: TodoAddRequest):
+    item = add_todo_item(request.content, due=request.due, source="api")
+    if not item:
+        return {"ok": False, "message": "빈 할 일은 추가할 수 없어."}
+    append_memory(
+        content=f"사용자의 할 일: {item['content']}",
+        source="todo",
+        pinned=False,
+        importance=70,
+        memory_type="todo",
+    )
+    return {"ok": True, "message": "할 일 추가 완료", "item": item}
+
+
+@app.get("/todo/list")
+def todo_list():
+    return {"ok": True, "items": list_open_todos()}
+
+
+@app.post("/todo/complete")
+def todo_complete(request: TodoCompleteRequest):
+    count = complete_todo_by_keyword(request.keyword)
+    return {"ok": True, "message": f"{count}개 완료 처리", "count": count}
+
+
+@app.post("/pc/open-app")
+def pc_open_app(request: PcOpenAppRequest):
+    ok, msg = open_app_by_name(request.name)
+    return {"ok": ok, "message": msg}
+
+
+@app.post("/pc/open-url")
+def pc_open_url(request: PcOpenUrlRequest):
+    ok, msg = open_url_or_site(request.url_or_name)
+    return {"ok": ok, "message": msg}
+
+
+
+# =========================
+# 파일 / 폴더 제어 API
+# =========================
+@app.get("/file/safe-folders")
+def file_safe_folders():
+    return {"ok": True, "folders": [str(p) for p in load_safe_folders()]}
+
+@app.post("/file/allow-folder")
+def file_allow_folder(request: FileAllowFolderRequest):
+    ok, msg = add_safe_folder(request.path)
+    return {"ok": ok, "message": msg, "folders": [str(p) for p in load_safe_folders()]}
+
+@app.post("/file/list")
+def file_list(request: FileListRequest):
+    ok, msg, items = list_folder(request.path)
+    return {"ok": ok, "message": msg, "items": items}
+
+@app.post("/file/open")
+def file_open(request: FileOpenRequest):
+    ok, msg = open_path(request.path)
+    return {"ok": ok, "message": msg}
+
+@app.post("/file/search")
+def file_search_api(request: FileSearchRequest):
+    ok, msg, items = search_files(request.keyword, folder=request.folder, limit=request.limit)
+    return {"ok": ok, "message": msg, "items": items}
+
+@app.post("/file/create-note")
+def file_create_note(request: NoteCreateRequest):
+    p = create_note_file(request.filename, request.content)
+    append_memory(f"사용자가 노트를 만들었어: {p.name}", source="file", importance=60, memory_type="file")
+    return {"ok": True, "message": f"노트를 만들었어: {p}", "path": str(p)}
+
+# =========================
+# 일정 / 알림 API
+# =========================
+@app.post("/schedule/add")
+def schedule_add(request: ScheduleAddRequest):
+    item = add_schedule_item(request.title, when=request.when, note=request.note, remind=request.remind)
+    if not item:
+        return {"ok": False, "message": "빈 일정은 추가할 수 없어."}
+    return {"ok": True, "message": "일정/알림 추가 완료", "item": item}
+
+@app.get("/schedule/list")
+def schedule_list():
+    return {"ok": True, "items": list_schedules()}
+
+@app.post("/schedule/complete")
+def schedule_complete(request: ScheduleCompleteRequest):
+    count = complete_schedule_by_keyword(request.keyword)
+    return {"ok": True, "message": f"{count}개 완료 처리", "count": count}
+
+@app.get("/schedule/check-due")
+def schedule_check_due():
+    items = due_schedules()
+    return {"ok": True, "count": len(items), "items": items}
+
+# =========================
+# 사이트별 자동 동작 API
+# =========================
+@app.post("/web/action/register")
+def web_action_register(request: SiteActionRegisterRequest):
+    if request.site_key not in SITE_CONFIGS:
+        return {"ok": False, "message": f"등록되지 않은 site_key야: {request.site_key}"}
+    action = register_site_action(request.name, request.site_key, request.steps, request.description)
+    return {"ok": True, "message": f"사이트 동작 등록 완료: {request.name}", "action": action}
+
+@app.get("/web/action/list")
+def web_action_list():
+    return {"ok": True, "items": load_site_actions()}
+
+@app.post("/web/action/run")
+def web_action_run(request: SiteActionRunRequest):
+    ok, msg, logs = run_site_action(request.name, headed=request.headed)
+    return {"ok": ok, "message": msg, "logs": logs}
+
+# =========================
+# 작업 플로우 API
+# =========================
+@app.post("/workflow/register")
+def workflow_register(request: WorkflowRegisterRequest):
+    workflow = register_workflow(request.name, request.steps, request.description)
+    return {"ok": True, "message": f"작업 플로우 등록 완료: {request.name}", "workflow": workflow}
+
+@app.get("/workflow/list")
+def workflow_list():
+    return {"ok": True, "items": load_workflows()}
+
+@app.post("/workflow/run")
+def workflow_run(request: WorkflowRunRequest):
+    ok, msg, logs = run_workflow(request.name)
+    return {"ok": ok, "message": msg, "logs": logs}
 
 @app.post("/secret/save")
 def secret_save(request: SecretSaveRequest):
