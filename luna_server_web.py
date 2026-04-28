@@ -86,6 +86,7 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
         x = int(screen_w * 0.82)
         y = int(screen_h * 0.50)
 
+        pyautogui.alert("이제 마우스를 움직일게")
         pyautogui.moveTo(x, y, duration=0.6)
         time.sleep(1.0)
         pyautogui.click(x, y)
