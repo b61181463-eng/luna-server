@@ -236,5 +236,21 @@
     "importance": 84,
     "memory_type": "auto_learned",
     "timestamp": 1777369610.964799
+  },
+  {
+    "content": "한밭대 LMS 로그인 자동화가 필요하다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 85,
+    "memory_type": "auto_learned",
+    "timestamp": 1777373564.8144877
+  },
+  {
+    "content": "로그인 입력칸 locator 문제가 반복되어, 입력칸 셀렉터 확인이 중요하다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 85,
+    "memory_type": "auto_learned",
+    "timestamp": 1777373567.4643173
   }
 ]
