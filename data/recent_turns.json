@@ -1,15 +1,5 @@
 [
   {
-    "user": "광민님 말고 광민아라고 불러줘~",
-    "reply": "알겠어, 광민아. 그렇게 부를게.",
-    "timestamp": 1777282818.6579692
-  },
-  {
-    "user": "그래 고마워",
-    "reply": "천만에, 광민아. 언제든 필요하면 말해줘.",
-    "timestamp": 1777282833.7101676
-  },
-  {
     "user": "종료할까?",
     "reply": "필요하면 언제든 불러줘, 광민아. 종료할게. 좋은 하루 보내.",
     "timestamp": 1777282883.592917
@@ -98,5 +88,15 @@
     "user": "들려?",
     "reply": "응, 광민아. 잘 들려.",
     "timestamp": 1777289914.7508392
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 완료를 3분 안에 확인하지 못했어.",
+    "timestamp": 1777348188.2879536
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
+    "timestamp": 1777348197.1886425
   }
 ]

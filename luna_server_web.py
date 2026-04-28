@@ -32,7 +32,7 @@ SITE_CONFIGS = {
     },
     "hanbat_lms": {
         "login_type": "native",
-        "login_url": "https://eclass.hanbat.ac.kr/xn-sso/login.php",
+        "login_url": "https://eclass.hanbat.ac.kr/",
         "home_url": "https://eclass.hanbat.ac.kr/",
         "username_selector": 'input[placeholder="아이디"]',
         "password_selector": 'input[placeholder="비밀번호"]',

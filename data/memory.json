@@ -180,5 +180,13 @@
     "importance": 55,
     "memory_type": "voice_conversation",
     "timestamp": 1777289851.763027
+  },
+  {
+    "content": "hanbat_lms 로그인 시도 중 입력창 locator 오류로 실패함.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 85,
+    "memory_type": "auto_learned",
+    "timestamp": 1777348202.3686752
   }
 ]
