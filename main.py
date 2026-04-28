@@ -792,7 +792,7 @@ def chat(request: ChatRequest):
         goals = get_active_goals()
         goal_text = "\n".join(f"- {g.get('content','')} ({g.get('progress',0)}%)" for g in goals) if goals else "없음"
 
-                system_prompt = f"""
+system_prompt = f"""
 너는 '루나'라는 개인 AI 비서이자, 광민의 AI 프로젝트 파트너야.
 
 [루나의 정체성]

@@ -100,5 +100,85 @@
     "importance": 70,
     "memory_type": "project",
     "timestamp": 1777287051.1617105
+  },
+  {
+    "content": "야 안녕",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777288012.1144538
+  },
+  {
+    "content": "그렇기야.",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777288164.171818
+  },
+  {
+    "content": "사용자는 나를 ‘루나’라고 부르는 대화를 한다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 92,
+    "memory_type": "auto_learned",
+    "timestamp": 1777288172.8123446
+  },
+  {
+    "content": "듣고 있어?",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777288245.3620546
+  },
+  {
+    "content": "기분 좋아.",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777288476.3028781
+  },
+  {
+    "content": "사용자는 루나를 부를 때 이름을 “루나”로 사용함.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 72,
+    "memory_type": "auto_learned",
+    "timestamp": 1777288515.7875946
+  },
+  {
+    "content": "기분은 좋아.",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777289127.7966204
+  },
+  {
+    "content": "업그레이드했는데 어때?",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777289745.1636941
+  },
+  {
+    "content": "사용자는 긍정적이고 격려받는 반응에 잘 맞는 편이다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 67,
+    "memory_type": "auto_learned",
+    "timestamp": 1777289757.6899505
+  },
+  {
+    "content": "들려요?",
+    "source": "voice",
+    "pinned": false,
+    "importance": 55,
+    "memory_type": "voice_conversation",
+    "timestamp": 1777289851.763027
   }
 ]
