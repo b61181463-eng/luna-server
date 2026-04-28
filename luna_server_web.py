@@ -69,25 +69,27 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
         chrome,
         f"--user-data-dir={str(LUNA_CHROME_PROFILE)}",
         "--profile-directory=Default",
+        "--start-maximized",
         url,
     ])
 
-    # 🔥 여기부터 추가
-    time.sleep(5)  # 크롬 로딩 대기
+    time.sleep(4)
 
     try:
-        button = pyautogui.locateCenterOnScreen(
-            r"D:\ai\luna_server\login_button.png",
-            confidence=0.7
-        )
+        import pyautogui
 
-        if button:
-            pyautogui.click(button)
-            return True, "루나 전용 크롬 열고 통합 로그인까지 눌렀어."
-        else:
-            return True, "크롬은 열었는데 로그인 버튼을 못 찾았어."
+        screen_w, screen_h = pyautogui.size()
+
+        # 한밭대 LMS 메인 화면 기준: 오른쪽 통합 로그인 버튼 위치
+        x = int(screen_w * 0.82)
+        y = int(screen_h * 0.50)
+
+        pyautogui.click(x, y)
+
+        return True, "루나 전용 크롬을 열고 통합 로그인 버튼 위치를 눌렀어."
+
     except Exception as e:
-        return False, f"자동 클릭 실패: {e}"
+        return True, f"크롬은 열었지만 자동 클릭은 실패했어: {e}"
 
 def wait_for_login_success(page, config, timeout=180000):
     """
