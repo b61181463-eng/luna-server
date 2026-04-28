@@ -1,16 +1,6 @@
 [
   {
     "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 완료를 3분 안에 확인하지 못했어.",
-    "timestamp": 1777349098.2342374
-  },
-  {
-    "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
-    "timestamp": 1777349214.3762155
-  },
-  {
-    "user": "lms 로그인해줘",
     "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
     "timestamp": 1777349263.7539625
   },
@@ -98,5 +88,15 @@
     "user": "lms 로그인해줘",
     "reply": "루나 전용 크롬으로 열었어.",
     "timestamp": 1777370421.2570586
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬으로 열었어.",
+    "timestamp": 1777370545.7111087
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬으로 열었어.",
+    "timestamp": 1777370636.8543143
   }
 ]

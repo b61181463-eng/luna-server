@@ -78,12 +78,16 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
     try:
         import pyautogui
 
+        pyautogui.hotkey("alt", "tab")
+        time.sleep(0.5)
+
         screen_w, screen_h = pyautogui.size()
 
-        # 한밭대 LMS 메인 화면 기준: 오른쪽 통합 로그인 버튼 위치
         x = int(screen_w * 0.82)
         y = int(screen_h * 0.50)
 
+        pyautogui.moveTo(x, y, duration=0.6)
+        time.sleep(1.0)
         pyautogui.click(x, y)
 
         return True, "루나 전용 크롬을 열고 통합 로그인 버튼 위치를 눌렀어."
