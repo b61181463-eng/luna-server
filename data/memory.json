@@ -196,5 +196,13 @@
     "importance": 72,
     "memory_type": "auto_learned",
     "timestamp": 1777348696.2090955
+  },
+  {
+    "content": "오류 내용: 브라우저/페이지가 닫힌 상태에서 아이디 입력칸을 찾지 못했다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 85,
+    "memory_type": "auto_learned",
+    "timestamp": 1777349221.2988713
   }
 ]

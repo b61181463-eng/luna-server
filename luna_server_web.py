@@ -154,12 +154,51 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
             )
 
             page = context.new_page()
+
+            # 한밭대 LMS는 반드시 메인 → 통합 로그인 순서로 진입
+            if site_key == "hanbat_lms":
+                page.goto("https://eclass.hanbat.ac.kr/", wait_until="domcontentloaded")
+                page.wait_for_timeout(1500)
+
+                try:
+                    page.get_by_text("통합 로그인", exact=True).click(timeout=15000)
+                except Exception:
+                    page.locator("text=통합 로그인").first.click(timeout=15000)
+
+                # 여기서 사용자가 직접 로그인할 시간 줌
+                end_time = time.time() + 180
+                success = False
+
+                while time.time() < end_time:
+                    current_url = page.url.lower()
+
+                    try:
+                        if page.get_by_text("로그아웃").count() > 0:
+                            success = True
+                            break
+                    except Exception:
+                        pass
+
+                    # INVALID_ACCESS면 바로 실패 처리
+                    try:
+                        if page.get_by_text("invalid_access", exact=False).count() > 0:
+                            context.close()
+                            return False, "LMS가 비정상 접근으로 막았어. 통합 로그인 버튼 클릭 경로를 다시 확인해야 해."
+                    except Exception:
+                        pass
+
+                    page.wait_for_timeout(1000)
+
+                if not success:
+                    context.close()
+                    return False, "hanbat_lms 로그인 성공 확인을 못 했어."
+
+                context.storage_state(path=config["storage_state"])
+                context.close()
+                return True, "hanbat_lms 로그인 상태를 저장했어. 다음부터는 자동으로 열 수 있어."
+
+            # 다른 사이트 기존 방식
             page.goto(config["login_url"], wait_until="domcontentloaded")
-            # 통합 로그인 버튼 클릭
-            try:
-                page.get_by_text("통합 로그인").click(timeout=10000)
-            except Exception:
-                pass
 
             success = wait_for_login_success(page, config, timeout=180000)
 
