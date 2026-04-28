@@ -32,7 +32,7 @@ SITE_CONFIGS = {
     },
     "hanbat_lms": {
         "login_type": "manual_google_bootstrap",
-        "login_url": "https://eclass.hanbat.ac.kr/",
+        "login_url": "https://eclass.hanbat.ac.kr/xn-sso/login.php?auto_login=&sso_only=&cvs_lgn=&site=&return_url=https%3A%2F%2Feclass.hanbat.ac.kr%2Fxn-sso%2Fgw-cb.php%3Ffrom%3D%26site%3D%26login_type%3Dstandalone%26return_url%3D",
         "home_url": "https://eclass.hanbat.ac.kr/",
         "success_check_selector": "text=로그아웃",
         "storage_state": str(AUTH_DIR / "hanbat_lms_state.json"),
