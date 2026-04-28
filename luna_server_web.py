@@ -160,10 +160,43 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
                 page.goto("https://eclass.hanbat.ac.kr/", wait_until="domcontentloaded")
                 page.wait_for_timeout(1500)
 
+                # 통합 로그인 버튼/링크를 더 정확하게 클릭
+                page.wait_for_timeout(2000)
+
+                clicked = False
+
+                # 1) 버튼 텍스트 클릭 시도
                 try:
-                    page.get_by_text("통합 로그인", exact=True).click(timeout=15000)
+                    page.get_by_text("통합 로그인").first.click(timeout=5000)
+                    clicked = True
                 except Exception:
-                    page.locator("text=통합 로그인").first.click(timeout=15000)
+                    pass
+
+                # 2) 실패하면 로그인 링크 직접 찾기
+                if not clicked:
+                    try:
+                        links = page.locator("a").all()
+                        for link in links:
+                            text = (link.inner_text(timeout=1000) or "").strip()
+                            href = link.get_attribute("href")
+                            if "통합 로그인" in text or (href and "login" in href.lower()):
+                                link.click(timeout=5000)
+                                clicked = True
+                                break
+                    except Exception:
+                        pass
+
+                # 3) 그래도 실패하면 오른쪽 로그인 버튼 클릭
+                if not clicked:
+                    try:
+                        page.locator("a[href*='login']").first.click(timeout=5000)
+                        clicked = True
+                    except Exception:
+                        pass
+
+                if not clicked:
+                    context.close()
+                    return False, "통합 로그인 버튼을 못 찾았어."
 
                 # 여기서 사용자가 직접 로그인할 시간 줌
                 end_time = time.time() + 180
