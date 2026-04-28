@@ -252,5 +252,13 @@
     "importance": 85,
     "memory_type": "auto_learned",
     "timestamp": 1777373567.4643173
+  },
+  {
+    "content": "main.py의 로그인 관련 코드가 필요함.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 78,
+    "memory_type": "auto_learned",
+    "timestamp": 1777373822.4148498
   }
 ]
