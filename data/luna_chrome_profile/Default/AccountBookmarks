@@ -1,0 +1,48 @@
+{
+   "checksum": "c10448ade8e0026e8538a4b7ee0eb688",
+   "roots": {
+      "bookmark_bar": {
+         "children": [  ],
+         "date_added": "13421843143846934",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "5",
+         "name": "북마크바",
+         "type": "folder"
+      },
+      "other": {
+         "children": [ {
+            "date_added": "13421478932889501",
+            "date_last_used": "0",
+            "guid": "6f761b48-e581-48a2-8285-6f0bfdb24c17",
+            "id": "8",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "중간고사 대비 - 미적분학Ⅰ 풀이 과정",
+            "type": "url",
+            "url": "https://chatgpt.com/g/g-p-69dcad936fd08191900f361b9dbdd4bf/c/69e370f3-7324-83e8-825b-d3e406ec3d1f"
+         } ],
+         "date_added": "13421843143846934",
+         "date_last_used": "0",
+         "date_modified": "13421478932889501",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "6",
+         "name": "기타 북마크",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13421843143846934",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "7",
+         "name": "모바일 북마크",
+         "type": "folder"
+      }
+   },
+   "sync_metadata": "Ct8BCr4BCIiBAhK3ASAAkgGjAQqgAQoOY2hyb21lX3N5bmNfYm0SBTUxIWJtGhIJizdhGIJQBgARizdhGIJQBgAiNAn70EwYglAGABADGVOzmEQNYZpRIAEqHDUxIWJtL2ZkOjkxNjM3MjM1NTk0Njg4OTMxNjEiNAn70EwYglAGABADGVOzmEQNYZpRIAEqHDUxIWJtL2ZkOjkxNjM3MjM1NTk0Njg4OTMxNjEpxX9iGIJQBgDqAQsIyYPCzwYQmLvqbhIAKhhkOHg3bUJLcjk0UVBSK1FCQUJzQUJ3PT1IAxKrAQgFEqYBChx5eEovNmZ2a2VjcjdrcDVFUXpCNHRXTHBkYkU9Ek5aOkFEcXRBWnhZT3F1akFpeUdYV1hpVlF2akhKN29rMW0zTDVwcG5oYjQzMzkrOGhhcFl3em1CT1RVdXNnVmY3c0MweTQvd09NSG1EWmIYACAAKAAw2tbDrdbkkQM4AEAAShxhUkNXTGdoRjliNUlucUtJRHZ1Si9qdlFrRmM9WgBlAAAAABLDAQgGEr4BChxZY1NUb252RVNQd3FDczRMMmNyVmh2NjhMOTg9EmZaOkFEcXRBWnpUWitWLzFhTVlJOUh5VU9MSmoxZnRsZENxSUhjSEJEdEp0Yy9meTkzTTBDdG9jMFc0V1dNSXp3R3plZ0V4cjkwM1RmYkxTWjIwS2doRkw5cEROQVVSdkxWWTNBPT0YACAAKAAw2tbDrdbkkQM4AEAAShxvUFZraHdCUmJWNjVLQ1dSMitJT05IV29PdTg9WgBlAAAAABLrAQgIEuYBChxCVmtsWFBmbm0wOWpYTENUdElUY0FYMVVKODQ9EmZaOkFEcXRBWnpLbUZhclZLSzJpM2ZJRXVGbnJEY3ZUQzh4NlJEQXJIdHIwT1FydFVTTHBkYndzeGhwR25aRngrd0FFQm5wQU9FUDQ5aHNFbkFKTi92L1dnOE0rYnFaZ3NEYnBRPT0YACAAKAAwsZHj3tSFlAM4mpOW7tszQJqTlu7bM0ocTFNVVEt1UU1hcU9sM2Nxc3NjTVQyMUh4NXRrPVoeIhxrMVV4MHlTNlJyNnNlNDJ6emhvTTZQbWZzSlU9ZYal2MgSwwEIBxK+AQocbmpnRHU4OGVDcnZYcDg2cEQ3ZkhHY3FGcDg4PRJmWjpBRHF0QVp5UGxDdXJZcG8wQjkwSTdMR2F0eS9KWDIyekJPY2NReHRyMUdhaVY3a2NvY2c0T0t5R2FDUTNNOVUvUEdyZVBkUVRvR2dRVUtIQkw3MTBiZHM0Q2tKYTJ4MFJSQT09GAAgACgAMNrWw63W5JEDOABAAEoceXpOQjAxY241NEE3Y1JVMHVUKy9QZ21UdFVvPVoAZQAAAAAwATgA",
+   "version": 1
+}

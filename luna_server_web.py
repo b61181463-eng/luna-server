@@ -1,6 +1,7 @@
 import time
 import subprocess
 import os
+import pyautogui
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from luna_server_secrets import load_secret
@@ -71,7 +72,22 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
         url,
     ])
 
-    return True, "루나 전용 크롬으로 열었어."
+    # 🔥 여기부터 추가
+    time.sleep(5)  # 크롬 로딩 대기
+
+    try:
+        button = pyautogui.locateCenterOnScreen(
+            r"D:\ai\luna_server\login_button.png",
+            confidence=0.8
+        )
+
+        if button:
+            pyautogui.click(button)
+            return True, "루나 전용 크롬 열고 통합 로그인까지 눌렀어."
+        else:
+            return True, "크롬은 열었는데 로그인 버튼을 못 찾았어."
+    except Exception as e:
+        return False, f"자동 클릭 실패: {e}"
 
 def wait_for_login_success(page, config, timeout=180000):
     """

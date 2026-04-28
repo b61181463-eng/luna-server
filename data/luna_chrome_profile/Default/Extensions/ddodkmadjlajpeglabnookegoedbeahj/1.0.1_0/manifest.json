@@ -1,0 +1,24 @@
+{
+   "action": {
+      "default_icon": "img/icon.png",
+      "default_popup": "popup.html",
+      "default_title": "Chrome Audio Capture"
+   },
+   "background": {
+      "service_worker": "background.js"
+   },
+   "default_locale": "en",
+   "description": "__MSG_shortDesc__",
+   "host_permissions": [ "\u003Call_urls>" ],
+   "icons": {
+      "128": "img/icon-128.png",
+      "16": "img/icon-16.png",
+      "48": "img/icon-48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqeGdZO88DaUhoGAfj3hh/SuozQGv+1FLBiTAeml1c1lDKqWwxd4aE1x/tV4XRESiK5GqNtrBGT16/VaqoOYCJEbVPbAaSNVFaO7GufbwY1fxDSKonAee9AvUXiP+Y9h27sG0F1IB0M7U0474KqSewEGWTY7XL9bgmSqGoL4MWpTO00E0M2Rs2uJqXIAMGN1IKLvasXKZLu5/KuA4jmltINUKKncyMWmj4dhnYIZEPTUgKrqrgCzd++fp/4wzTWlr0DIGDYhAfGx0VigVfMAbq1xkztjKQB6cUw6zZ5rwAEYDaG5tGo0B8D9oxArTORCsy6bIXUzUoldr+5HGGOpnbwIDAQAB",
+   "manifest_version": 3,
+   "name": "__MSG_appName__",
+   "permissions": [ "tabs", "offscreen", "tabCapture", "notifications", "downloads", "storage" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.0.1"
+}
