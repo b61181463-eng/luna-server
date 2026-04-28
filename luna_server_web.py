@@ -1,4 +1,6 @@
 import time
+import subprocess
+import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from playwright_stealth import stealth_sync
@@ -10,6 +12,15 @@ AUTH_DIR.mkdir(parents=True, exist_ok=True)
 
 PROFILE_DIR = BASE_DIR / "data" / "profiles"
 PROFILE_DIR.mkdir(parents=True, exist_ok=True)
+
+LUNA_CHROME_PROFILE = BASE_DIR / "data" / "luna_chrome_profile"
+LUNA_CHROME_PROFILE.mkdir(parents=True, exist_ok=True)
+
+CHROME_PATHS = [
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+]
 
 SITE_CONFIGS = {
     "github": {
@@ -41,6 +52,27 @@ SITE_CONFIGS = {
         "browser_channel": "chrome",
     },
 }
+
+def find_chrome_path():
+    for path in CHROME_PATHS:
+        if Path(path).exists():
+            return path
+    return None
+
+
+def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
+    chrome = find_chrome_path()
+    if not chrome:
+        return False, "Chrome 실행 파일을 찾지 못했어."
+
+    subprocess.Popen([
+        chrome,
+        f"--user-data-dir={str(LUNA_CHROME_PROFILE)}",
+        "--profile-directory=Default",
+        url,
+    ])
+
+    return True, "루나 전용 크롬으로 열었어."
 
 def wait_for_login_success(page, config, timeout=180000):
     """

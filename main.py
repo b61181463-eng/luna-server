@@ -653,13 +653,13 @@ def handle_builtin_command(user_message: str):
 
     # 한밭대 LMS 로그인/열기
     if any(x in msg.lower() for x in ["lms", "엘엠에스", "이클래스", "eclass", "한밭대 lms"]):
-        if any(x in msg for x in ["로그인", "로그인해줘", "들어가", "접속"]):
-            ok, out = login_site("hanbat_lms", headed=True)
-            return out
-
-        if any(x in msg for x in ["열어", "켜", "보여줘"]):
-            ok, out = open_site_with_saved_login("hanbat_lms", headed=True)
-            return out
+        if any(x in msg for x in ["로그인", "로그인해줘", "들어가", "접속", "열어", "켜", "보여줘"]):
+            try:
+                from luna_server_web import open_luna_chrome
+                ok, out = open_luna_chrome("https://eclass.hanbat.ac.kr/")
+                return out
+            except Exception as e:
+                return f"LMS 열기 실패: {e}"
 
     # 기능 소개
     if any(x in msg for x in ["뭐 할 수", "기능", "할 수 있어", "소개해"]):
