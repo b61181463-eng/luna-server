@@ -5,6 +5,8 @@ import pyautogui
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from luna_server_secrets import load_secret
+from luna_server_secrets import save_secret
+save_secret("hanbat_portal", "학번", "비밀번호")
 
 BASE_DIR = Path(__file__).resolve().parent
 AUTH_DIR = BASE_DIR / "data" / "auth_states"
@@ -42,14 +44,15 @@ SITE_CONFIGS = {
         "success_check_selector": ".MyView-module__my_info___GHKqS, .gnb_my_namebox",
         "storage_state": str(AUTH_DIR / "naver_state.json"),
     },
-    "hanbat_lms": {
-        "login_type": "manual_google_bootstrap",
-        "login_url": "https://eclass.hanbat.ac.kr/",
-        "home_url": "https://eclass.hanbat.ac.kr/",
+    "hanbat_portal": {
+        "login_type": "native",
+        "login_url": "https://www.hanbat.ac.kr/kor/login.do",
+        "home_url": "https://www.hanbat.ac.kr/kor/",
+        "username_selector": "input[type='text']",
+        "password_selector": "input[type='password']",
+        "submit_selector": "button, input[type='submit']",
         "success_check_selector": "text=로그아웃",
-        "storage_state": str(AUTH_DIR / "hanbat_lms_state.json"),
-        "persistent_profile_dir": str(PROFILE_DIR / "hanbat_lms_profile"),
-        "browser_channel": "chrome",
+        "storage_state": str(AUTH_DIR / "hanbat_portal_state.json"),
     },
 }
 
@@ -83,8 +86,9 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
 
         screen_w, screen_h = pyautogui.size()
 
-        x = int(screen_w * 0.82)
-        y = int(screen_h * 0.50)
+        while True:
+            print(pyautogui.position())
+            time.sleep(1)
 
         pyautogui.alert("이제 마우스를 움직일게")
         pyautogui.moveTo(x, y, duration=0.6)

@@ -1,31 +1,6 @@
 [
   {
     "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 완료를 3분 안에 확인하지 못했어.",
-    "timestamp": 1777349768.1490111
-  },
-  {
-    "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
-    "timestamp": 1777349956.2218328
-  },
-  {
-    "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
-    "timestamp": 1777349986.201562
-  },
-  {
-    "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
-    "timestamp": 1777350098.501857
-  },
-  {
-    "user": "lms 로그인해줘",
-    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
-    "timestamp": 1777350145.5416133
-  },
-  {
-    "user": "lms 로그인해줘",
     "reply": "LMS 열기 실패: cannot import name 'stealth_sync' from 'playwright_stealth' (C:\\Users\\b6118\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\playwright_stealth\\__init__.py)",
     "timestamp": 1777369306.911955
   },
@@ -98,5 +73,30 @@
     "user": "lms 로그인해줘",
     "reply": "루나 전용 크롬으로 열었어.",
     "timestamp": 1777370915.5690181
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬으로 열었어.",
+    "timestamp": 1777371330.4017417
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬으로 열었어.",
+    "timestamp": 1777371798.0763776
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬을 열고 통합 로그인 버튼 위치를 눌렀어.",
+    "timestamp": 1777371912.1642659
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬을 열고 통합 로그인 버튼 위치를 눌렀어.",
+    "timestamp": 1777372122.0470397
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "루나 전용 크롬을 열고 통합 로그인 버튼 위치를 눌렀어.",
+    "timestamp": 1777372158.2800796
   }
 ]
