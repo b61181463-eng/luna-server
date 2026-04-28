@@ -31,14 +31,13 @@ SITE_CONFIGS = {
         "storage_state": str(AUTH_DIR / "naver_state.json"),
     },
     "hanbat_lms": {
-        "login_type": "native",
+        "login_type": "manual_google_bootstrap",
         "login_url": "https://eclass.hanbat.ac.kr/",
         "home_url": "https://eclass.hanbat.ac.kr/",
-        "username_selector": 'input[placeholder="아이디"]',
-        "password_selector": 'input[placeholder="비밀번호"]',
-        "submit_selector": 'button:has-text("로그인")',
-        "success_check_selector": 'text=로그아웃',
+        "success_check_selector": "text=로그아웃",
         "storage_state": str(AUTH_DIR / "hanbat_lms_state.json"),
+        "persistent_profile_dir": str(PROFILE_DIR / "hanbat_lms_profile"),
+        "browser_channel": "chrome",
     },
 }
 

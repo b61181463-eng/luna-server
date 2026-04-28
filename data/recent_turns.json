@@ -1,20 +1,5 @@
 [
   {
-    "user": "종료할까?",
-    "reply": "필요하면 언제든 불러줘, 광민아. 종료할게. 좋은 하루 보내.",
-    "timestamp": 1777282883.592917
-  },
-  {
-    "user": "음성 시작 버튼 삭제",
-    "reply": "음성 시작 버튼을 삭제하려면, 어떤 기기나 앱에서 삭제를 원하는지 알려줄래?",
-    "timestamp": 1777282946.7148778
-  },
-  {
-    "user": "루나야 지금 우리 뭐 하고 있었지?",
-    "reply": "음성 시작 버튼 삭제 방법을 물어봤었어. 기기나 앱을 알려달라고 했고.",
-    "timestamp": 1777287000.0476587
-  },
-  {
     "user": "그렇구나 알겠어 고마워",
     "reply": "천만에, 광민아. 언제든 도움이 필요하면 말해줘.",
     "timestamp": 1777287027.2831984
@@ -98,5 +83,20 @@
     "user": "lms 로그인해줘",
     "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
     "timestamp": 1777348197.1886425
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
+    "timestamp": 1777348292.6024709
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
+    "timestamp": 1777348366.793408
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
+    "timestamp": 1777348503.9497852
   }
 ]
