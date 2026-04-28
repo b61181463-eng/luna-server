@@ -152,6 +152,9 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
                 user_data_dir=profile_dir,
                 headless=False,
                 channel=channel,
+                args=[
+                    "--disable-blink-features=AutomationControlled"
+                ],
             )
 
             page = context.new_page()

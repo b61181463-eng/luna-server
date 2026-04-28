@@ -204,5 +204,21 @@
     "importance": 85,
     "memory_type": "auto_learned",
     "timestamp": 1777349221.2988713
+  },
+  {
+    "content": "다음 로그인 시 페이지가 열린 상태인지 먼저 확인해야 한다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 60,
+    "memory_type": "auto_learned",
+    "timestamp": 1777349967.3746834
+  },
+  {
+    "content": "오류 메시지: `Locator.fill: Target page, context or browser has been closed`",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 71,
+    "memory_type": "auto_learned",
+    "timestamp": 1777349996.3914726
   }
 ]
