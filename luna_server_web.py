@@ -1,6 +1,7 @@
 import time
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright_stealth import stealth_sync
 from luna_server_secrets import load_secret
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -154,6 +155,7 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
             )
 
             page = context.new_page()
+            stealth_sync(page)
 
             # 한밭대 LMS는 반드시 메인 → 통합 로그인 순서로 진입
             if site_key == "hanbat_lms":
@@ -265,8 +267,11 @@ def open_site_with_saved_login(site_key: str, target_url: str | None = None, hea
 
                 context = p.chromium.launch_persistent_context(
                     user_data_dir=profile_dir,
-                    headless=not headed,
+                    headless=False,
                     channel=channel,
+                    args=[
+                        "--disable-blink-features=AutomationControlled"
+                    ]
                 )
                 page = context.new_page()
                 page.goto(target_url or config["home_url"], wait_until="domcontentloaded")
