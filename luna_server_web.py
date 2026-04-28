@@ -32,7 +32,7 @@ SITE_CONFIGS = {
     },
     "hanbat_lms": {
         "login_type": "manual_google_bootstrap",
-        "login_url": "https://eclass.hanbat.ac.kr/xn-sso/login.php?auto_login=&sso_only=&cvs_lgn=&site=&return_url=https%3A%2F%2Feclass.hanbat.ac.kr%2Fxn-sso%2Fgw-cb.php%3Ffrom%3D%26site%3D%26login_type%3Dstandalone%26return_url%3D",
+        "login_url": "https://eclass.hanbat.ac.kr/",
         "home_url": "https://eclass.hanbat.ac.kr/",
         "success_check_selector": "text=로그아웃",
         "storage_state": str(AUTH_DIR / "hanbat_lms_state.json"),
@@ -112,6 +112,11 @@ def login_site(site_key: str, headed: bool = True):
             page = context.new_page()
 
             page.goto(config["login_url"], wait_until="domcontentloaded")
+            # 통합 로그인 버튼 클릭
+            try:
+                page.get_by_text("통합 로그인").click(timeout=10000)
+            except Exception:
+                pass
             page.locator(config["username_selector"]).fill(username)
             page.locator(config["password_selector"]).fill(password)
             page.locator(config["submit_selector"]).click()
