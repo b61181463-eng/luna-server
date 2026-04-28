@@ -260,5 +260,13 @@
     "importance": 78,
     "memory_type": "auto_learned",
     "timestamp": 1777373822.4148498
+  },
+  {
+    "content": "한밭대 LMS 로그인 자동화는 셀렉터 확인이 먼저 필요하다.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 58,
+    "memory_type": "auto_learned",
+    "timestamp": 1777374008.2705529
   }
 ]
