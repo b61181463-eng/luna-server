@@ -3,7 +3,6 @@ import subprocess
 import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from playwright_stealth import stealth_sync
 from luna_server_secrets import load_secret
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -190,7 +189,6 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
             )
 
             page = context.new_page()
-            stealth_sync(page)
 
             # 한밭대 LMS는 반드시 메인 → 통합 로그인 순서로 진입
             if site_key == "hanbat_lms":

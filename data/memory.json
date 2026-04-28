@@ -220,5 +220,13 @@
     "importance": 71,
     "memory_type": "auto_learned",
     "timestamp": 1777349996.3914726
+  },
+  {
+    "content": "LMS 로그인 시도 중 `playwright_stealth`의 `stealth_sync` import 오류로 실패함.",
+    "source": "conversation_auto",
+    "pinned": false,
+    "importance": 78,
+    "memory_type": "auto_learned",
+    "timestamp": 1777369315.2408047
   }
 ]
