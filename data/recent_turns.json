@@ -1,20 +1,5 @@
 [
   {
-    "user": "야 안녕",
-    "reply": "안녕, 광민아. 무슨 일 있니?",
-    "timestamp": 1777288023.979533
-  },
-  {
-    "user": "안녕?",
-    "reply": "안녕, 광민아. 오늘은 어떤가?",
-    "timestamp": 1777288154.4528553
-  },
-  {
-    "user": "그렇기야.",
-    "reply": "네, 그렇지요. 무엇을 도와줄까요, 광민아?",
-    "timestamp": 1777288174.9230149
-  },
-  {
     "user": "듣고 있어?",
     "reply": "응, 광민아. 잘 듣고 있어.",
     "timestamp": 1777288256.7110112
@@ -98,5 +83,20 @@
     "user": "lms 로그인해줘",
     "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
     "timestamp": 1777348689.1609547
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 중 오류가 났어: Locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator(\"input[placeholder=\\\"아이디\\\"]\")\n",
+    "timestamp": 1777349009.794083
+  },
+  {
+    "user": "lms 열어줘",
+    "reply": "hanbat_lms 저장된 로그인 상태가 없어. 먼저 로그인해야 해.",
+    "timestamp": 1777349047.2166092
+  },
+  {
+    "user": "lms 로그인해줘",
+    "reply": "hanbat_lms 로그인 완료를 3분 안에 확인하지 못했어.",
+    "timestamp": 1777349098.2342374
   }
 ]

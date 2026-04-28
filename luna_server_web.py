@@ -112,11 +112,6 @@ def login_site(site_key: str, headed: bool = True):
             page = context.new_page()
 
             page.goto(config["login_url"], wait_until="domcontentloaded")
-            # 통합 로그인 버튼 클릭
-            try:
-                page.get_by_text("통합 로그인").click(timeout=10000)
-            except Exception:
-                pass
             page.locator(config["username_selector"]).fill(username)
             page.locator(config["password_selector"]).fill(password)
             page.locator(config["submit_selector"]).click()
@@ -160,6 +155,11 @@ def bootstrap_manual_login(site_key: str, headed: bool = True):
 
             page = context.new_page()
             page.goto(config["login_url"], wait_until="domcontentloaded")
+            # 통합 로그인 버튼 클릭
+            try:
+                page.get_by_text("통합 로그인").click(timeout=10000)
+            except Exception:
+                pass
 
             success = wait_for_login_success(page, config, timeout=180000)
 
