@@ -78,7 +78,7 @@ def open_luna_chrome(url: str = "https://eclass.hanbat.ac.kr/"):
     try:
         button = pyautogui.locateCenterOnScreen(
             r"D:\ai\luna_server\login_button.png",
-            confidence=0.8
+            confidence=0.7
         )
 
         if button:
