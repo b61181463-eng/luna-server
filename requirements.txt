@@ -6,3 +6,5 @@ duckduckgo-search
 playwright
 keyring
 python-multipart
+numpy
+scipy
