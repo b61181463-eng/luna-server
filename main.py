@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
+from luna_knowledge import search_knowledge
 import os
 import json
 import time
@@ -844,6 +845,8 @@ def chat(request: ChatRequest):
 
         # 1. 기억 검색
         memory_items = search_memories(user_message, max_items=12)
+        knowledge_items = search_knowledge(user_message)
+        knowledge_context = "\n\n".join(knowledge_items)
         memory_context = "\n".join(
             f"- ({item.get('memory_type','')}) {item.get('content','')}"
             for item in memory_items
@@ -957,6 +960,9 @@ def chat(request: ChatRequest):
         - 사용자가 이미 알고 있는 설명은 반복하지 마.
         - 오류 메시지가 있으면 원인 → 해결 순서로 말해.
         - 최신 정보가 필요한 질문이면 웹 정보가 있을 때만 확신해서 말해.
+
+        [전문 지식 자료]
+        {knowledge_context if knowledge_context else '없음'}
         """
 
         # 목표 자동 저장
@@ -1167,3 +1173,12 @@ def search_live(q: str):
         return {"ok": True, "query": q, "results": results, "context": build_search_context(results)}
     except Exception as e:
         return {"ok": False, "message": str(e), "results": []}
+
+@app.post("/knowledge/rebuild")
+def knowledge_rebuild():
+    try:
+        from luna_knowledge import build_knowledge_index
+        result = build_knowledge_index(force=True)
+        return result
+    except Exception as e:
+        return {"ok": False, "message": str(e)}
