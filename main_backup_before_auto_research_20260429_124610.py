@@ -3,18 +3,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
-try:
-    from luna_knowledge import search_knowledge
-except Exception:
-    def search_knowledge(query, max_items=4):
-        return []
-try:
-    from luna_auto_research import learn_from_arxiv, maybe_auto_research
-except Exception:
-    def learn_from_arxiv(query, max_results=3):
-        return {'ok': False, 'message': '자동 연구 모듈을 불러오지 못했어.'}
-    def maybe_auto_research(query, knowledge_context='', max_results=2):
-        return {'ok': False, 'skipped': True}
 import os
 import json
 import time
@@ -663,21 +651,6 @@ def run_workflow(name: str):
 def handle_builtin_command(user_message: str):
     msg = normalize_text(user_message)
 
-
-    # 자동 연구/논문 학습
-    if any(k in msg for k in ["논문 학습", "연구 자료 찾아", "자료 학습", "arxiv 학습"]):
-        try:
-            query = msg
-            for k in ["논문 학습", "연구 자료 찾아", "자료 학습", "arxiv 학습", "루나야", "루나"]:
-                query = query.replace(k, "")
-            query = query.strip()
-            if not query:
-                return "무슨 주제로 연구 자료를 찾을지 말해줘. 예: '논문 학습 RAG'"
-            result = learn_from_arxiv(query, max_results=3)
-            return result.get("message", str(result)) if isinstance(result, dict) else str(result)
-        except Exception as e:
-            return f"논문 학습 실패: {e}"
-
     # 한밭대 포털 로그인
     if any(x in msg.lower() for x in ["한밭대", "hanbat", "포털", "portal"]):
         if any(x in msg for x in ["로그인", "로그인해줘", "들어가", "접속"]):
@@ -1130,17 +1103,6 @@ def knowledge_refine():
     try:
         from luna_knowledge_refiner import refine_memories
         result = refine_memories()
-        return result
-    except Exception as e:
-        return {"ok": False, "message": str(e)}
-
-# =========================================================
-# 자동 연구 학습 API
-# =========================================================
-@app.post("/research/arxiv")
-def research_arxiv(q: str, max_results: int = 3):
-    try:
-        result = learn_from_arxiv(q, max_results=max_results)
         return result
     except Exception as e:
         return {"ok": False, "message": str(e)}
