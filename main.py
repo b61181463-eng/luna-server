@@ -8,6 +8,7 @@ import os
 import json
 import time
 import re
+import random
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -1047,6 +1048,14 @@ def chat(request: ChatRequest):
 
         if not reply:
             reply = "음, 지금 답변을 잘 못 만들었어. 다시 말해줄래?"
+
+        # 자동 학습 (확률적으로 실행)
+        if random.random() < 0.2:
+            try:
+                from luna_autonomous import autonomous_learning
+                print(autonomous_learning())
+            except:
+                pass
 
         # 5. 자동 학습 + 지식 저장 + 최근 대화 저장 + 정리
         auto_learn_from_turn(user_message, reply)
