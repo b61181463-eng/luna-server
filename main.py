@@ -3,18 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
-try:
-    from luna_knowledge import search_knowledge
-except Exception:
-    def search_knowledge(query, max_items=4):
-        return []
-try:
-    from luna_auto_research import learn_from_arxiv, maybe_auto_research
-except Exception:
-    def learn_from_arxiv(query, max_results=3):
-        return {'ok': False, 'message': '자동 연구 모듈을 불러오지 못했어.'}
-    def maybe_auto_research(query, knowledge_context='', max_results=2):
-        return {'ok': False, 'skipped': True}
+from luna_knowledge import search_knowledge
 import os
 import json
 import time
@@ -508,6 +497,73 @@ def auto_learn_from_turn(user_message: str, reply: str):
 
     return learned
 
+
+# =========================================================
+# 지식 축적 시스템: 대화에서 배운 내용 저장
+# =========================================================
+def should_store_knowledge_turn(user_message: str, reply: str) -> bool:
+    """일상 잡담은 제외하고, 나중에 다시 쓸 만한 Q/A만 지식으로 저장한다."""
+    user_message = normalize_text(user_message)
+    reply = normalize_text(reply)
+
+    if not user_message or not reply:
+        return False
+    if is_low_quality_memory(user_message) or is_low_quality_memory(reply):
+        return False
+    if len(user_message) < 6 or len(reply) < 12:
+        return False
+
+    # 명령/일회성 동작은 지식으로 저장하지 않음
+    skip_keywords = [
+        "열어", "켜", "로그인", "종료", "꺼줘", "알림 등록", "할 일 추가",
+        "워크플로우", "서버 확인", "경로 열어",
+    ]
+    if any(k in user_message for k in skip_keywords):
+        return False
+
+    # 프로젝트/공부/오류/개념/방법 관련은 저장 가치가 높음
+    useful_keywords = [
+        "왜", "방법", "어떻게", "원인", "오류", "해결", "코드", "설정",
+        "루나", "프로젝트", "기억", "서버", "음성", "마이크", "스피커",
+        "공부", "시험", "물리", "화학", "미적", "수학", "공식", "개념",
+        "기획", "아이디어", "자동화", "검색", "학습", "지식",
+    ]
+    return any(k in user_message for k in useful_keywords) or len(reply) >= 80
+
+
+def save_knowledge_from_turn(user_message: str, reply: str):
+    """대화 1턴을 재사용 가능한 지식 형태로 저장한다."""
+    try:
+        if not should_store_knowledge_turn(user_message, reply):
+            return None
+
+        user_message = normalize_text(user_message)
+        reply = normalize_text(reply)
+
+        # 너무 긴 답변은 메모리 파일이 커지지 않게 줄임
+        short_reply = reply
+        if len(short_reply) > 700:
+            short_reply = short_reply[:700].rstrip() + "..."
+
+        content = f"질문: {user_message}\n답변 핵심: {short_reply}"
+        importance = 58
+
+        if any(k in user_message for k in ["루나", "프로젝트", "오류", "해결", "코드", "설정"]):
+            importance = 72
+        if any(k in user_message for k in ["기억해", "잊지마", "앞으로", "다음부터"]):
+            importance = 85
+
+        return append_memory(
+            content=content,
+            source="knowledge_auto",
+            pinned=False,
+            importance=importance,
+            memory_type="knowledge",
+        )
+    except Exception as e:
+        print("[save_knowledge_from_turn 오류]", e)
+        return None
+
 # =========================================================
 # 할 일 / 일정 / 파일 / PC 제어 / 워크플로우
 # =========================================================
@@ -663,21 +719,6 @@ def run_workflow(name: str):
 def handle_builtin_command(user_message: str):
     msg = normalize_text(user_message)
 
-
-    # 자동 연구/논문 학습
-    if any(k in msg for k in ["논문 학습", "연구 자료 찾아", "자료 학습", "arxiv 학습"]):
-        try:
-            query = msg
-            for k in ["논문 학습", "연구 자료 찾아", "자료 학습", "arxiv 학습", "루나야", "루나"]:
-                query = query.replace(k, "")
-            query = query.strip()
-            if not query:
-                return "무슨 주제로 연구 자료를 찾을지 말해줘. 예: '논문 학습 RAG'"
-            result = learn_from_arxiv(query, max_results=3)
-            return result.get("message", str(result)) if isinstance(result, dict) else str(result)
-        except Exception as e:
-            return f"논문 학습 실패: {e}"
-
     # 한밭대 포털 로그인
     if any(x in msg.lower() for x in ["한밭대", "hanbat", "포털", "portal"]):
         if any(x in msg for x in ["로그인", "로그인해줘", "들어가", "접속"]):
@@ -750,6 +791,17 @@ def handle_builtin_command(user_message: str):
         ok, out = safe_open_path(p)
         return out
 
+    # 논문 학습
+    if "논문 학습" in msg or "연구 자료 찾아" in msg:
+        try:
+            from luna_research import learn_from_arxiv
+            query = msg.replace("논문 학습", "").replace("연구 자료 찾아", "").strip()
+            if not query:
+                return "무슨 주제로 논문을 찾을지 말해줘."
+            return learn_from_arxiv(query)
+        except Exception as e:
+            return f"논문 학습 실패: {e}"
+            
     # 앱/사이트 열기
     ok, out = open_app_or_site_from_message(msg)
     if ok:
@@ -799,10 +851,13 @@ def chat(request: ChatRequest):
         if builtin_reply:
             append_recent_turn(user_message, builtin_reply)
             auto_learn_from_turn(user_message, builtin_reply)
+            save_knowledge_from_turn(user_message, builtin_reply)
             return {"reply": builtin_reply, "used_web_search": False, "search_count": 0}
 
         # 1. 기억 검색
         memory_items = search_memories(user_message, max_items=12)
+        knowledge_items = search_knowledge(user_message)
+        knowledge_context = "\n\n".join(knowledge_items)
         memory_context = "\n".join(
             f"- ({item.get('memory_type','')}) {item.get('content','')}"
             for item in memory_items
@@ -889,7 +944,8 @@ def chat(request: ChatRequest):
         {memory_context if memory_context else '관련 기억 없음'}
 
         [기억 사용 규칙]
-        - 위 기억은 광민에 대한 장기 기억이야.
+        - 위 기억은 광민에 대한 장기 기억과 루나가 대화에서 축적한 지식이야.
+        - (knowledge)는 예전에 질문/답변으로 배운 내용이므로, 비슷한 문제가 나오면 해결 근거로 활용해.
         - 관련 있는 질문에서만 자연스럽게 사용해.
         - “이전에”, “아까”, “지난번”, “어디까지”, “다음 단계” 같은 말이 나오면 기억과 최근 대화를 적극 참고해.
         - 기억 내용을 매번 티내지 마.
@@ -915,6 +971,40 @@ def chat(request: ChatRequest):
         - 사용자가 이미 알고 있는 설명은 반복하지 마.
         - 오류 메시지가 있으면 원인 → 해결 순서로 말해.
         - 최신 정보가 필요한 질문이면 웹 정보가 있을 때만 확신해서 말해.
+        - 개념 설명 요청이면 다음 구조로 답해:
+            1) 정의
+            2) 핵심 원리
+            3) 장점과 한계
+            4) 실제 예시
+            5) 결론 요약
+
+        - 비교 질문이면:
+            - 기준을 먼저 정의
+            - 항목별 비교
+            - 결론
+
+        - 틀릴 가능성이 있으면 반드시:
+            "내가 아는 범위에서는" 또는 "가능한 해석은"이라고 말해.
+
+        - 단순 정보 전달이 아니라 "이해를 돕는 설명"을 우선해.
+
+        [연구 모드 규칙]
+        - 사용자가 "연구 모드", "깊게", "논문처럼", "교수님 수준", "박사 수준", "분석해줘"라고 말하면 연구 모드로 답해.
+        - 연구 모드에서는 다음 순서를 따른다:
+            1) 핵심 결론
+            2) 개념 정의
+            3) 작동 원리 또는 논리 구조
+            4) 근거/자료 기반 설명
+            5) 장점과 한계
+            6) 반례 또는 주의점
+            7) 최종 요약
+        - 자료나 기억에 근거가 있으면 우선 사용한다.
+        - 확실하지 않은 내용은 확실한 것처럼 말하지 않는다.
+        - 단순 암기가 아니라 원인, 구조, 비교, 한계를 설명한다.
+        - 답변이 너무 길어질 것 같으면 먼저 핵심을 말하고, 필요하면 이어서 설명한다.
+
+        [전문 지식 자료]
+        {knowledge_context if knowledge_context else '없음'}
         """
 
         # 목표 자동 저장
@@ -958,8 +1048,27 @@ def chat(request: ChatRequest):
         if not reply:
             reply = "음, 지금 답변을 잘 못 만들었어. 다시 말해줄래?"
 
-        # 5. 자동 학습 + 최근 대화 저장 + 정리
+        # 5. 자동 학습 + 지식 저장 + 최근 대화 저장 + 정리
         auto_learn_from_turn(user_message, reply)
+
+        # 루나가 답변한 유용한 지식을 knowledge 메모리로 저장
+        try:
+            if len(user_message.strip()) >= 6 and len(reply.strip()) >= 30:
+                learning_text = (
+                    f"질문: {user_message}\n"
+                    f"답변 요약: {reply[:800]}"
+                )
+
+                append_memory(
+                    learning_text,
+                    source="auto_learning_loop",
+                    pinned=False,
+                    importance=65,
+                    memory_type="knowledge"
+                )
+        except Exception as e:
+            print("[auto knowledge save 오류]", e)
+
         append_recent_turn(user_message, reply)
         try:
             clean_memories()
@@ -1125,23 +1234,11 @@ def search_live(q: str):
     except Exception as e:
         return {"ok": False, "message": str(e), "results": []}
 
-@app.post("/knowledge/refine")
-def knowledge_refine():
+@app.post("/knowledge/rebuild")
+def knowledge_rebuild():
     try:
-        from luna_knowledge_refiner import refine_memories
-        result = refine_memories()
+        from luna_knowledge import build_knowledge_index
+        result = build_knowledge_index(force=True)
         return result
     except Exception as e:
         return {"ok": False, "message": str(e)}
-
-# =========================================================
-# 자동 연구 학습 API
-# =========================================================
-@app.post("/research/arxiv")
-def research_arxiv(q: str, max_results: int = 3):
-    try:
-        result = learn_from_arxiv(q, max_results=max_results)
-        return result
-    except Exception as e:
-        return {"ok": False, "message": str(e)}
-
